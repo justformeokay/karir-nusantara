@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 export interface Education {
   id: string;
@@ -80,17 +80,53 @@ interface CVContextType {
 
 const CVContext = createContext<CVContextType | undefined>(undefined);
 
+// Helper to validate and normalize CV data schema
+const normalizeCVData = (data: Partial<CVData>): CVData => {
+  return {
+    personalInfo: {
+      fullName: data.personalInfo?.fullName ?? '',
+      email: data.personalInfo?.email ?? '',
+      phone: data.personalInfo?.phone ?? '',
+      address: data.personalInfo?.address ?? '',
+      linkedIn: data.personalInfo?.linkedIn ?? '',
+      portfolio: data.personalInfo?.portfolio ?? '',
+      summary: data.personalInfo?.summary ?? '',
+      photo: data.personalInfo?.photo ?? '',
+    },
+    education: Array.isArray(data.education) ? data.education : [],
+    workExperience: Array.isArray(data.workExperience) ? data.workExperience : [],
+    skills: Array.isArray(data.skills) ? data.skills : [],
+    certifications: Array.isArray(data.certifications) ? data.certifications : [],
+  };
+};
+
 export const CVProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cvData, setCvData] = useState<CVData>(() => {
-    const saved = localStorage.getItem('cvData');
-    return saved ? JSON.parse(saved) : defaultCVData;
+    try {
+      const saved = localStorage.getItem('cvData');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Normalize to ensure all arrays exist even if localStorage is partial/corrupted
+        const normalized = normalizeCVData(parsed);
+        console.log('✅ Loaded CV data from localStorage:', normalized);
+        return normalized;
+      }
+    } catch (error) {
+      console.error('❌ Error loading CV data from localStorage:', error);
+    }
+    return defaultCVData;
   });
 
   const saveToLocalStorage = (data: CVData) => {
-    localStorage.setItem('cvData', JSON.stringify(data));
+    try {
+      localStorage.setItem('cvData', JSON.stringify(data));
+      console.log('✅ Saved CV data to localStorage:', data);
+    } catch (error) {
+      console.error('❌ Error saving CV data to localStorage:', error);
+    }
   };
 
-  const updatePersonalInfo = (data: Partial<CVData['personalInfo']>) => {
+  const updatePersonalInfo = useCallback((data: Partial<CVData['personalInfo']>) => {
     setCvData(prev => {
       const updated = {
         ...prev,
@@ -99,119 +135,150 @@ export const CVProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       saveToLocalStorage(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const addEducation = (education: Omit<Education, 'id'>) => {
+  const addEducation = useCallback((education: Omit<Education, 'id'>) => {
     setCvData(prev => {
+      const newId = Date.now().toString();
+      const newEducationItem = { ...education, id: newId };
+      // Defensive: ensure prev.education is an array
+      const prevEducation = Array.isArray(prev.education) ? prev.education : [];
       const updated = {
         ...prev,
-        education: [...prev.education, { ...education, id: Date.now().toString() }],
+        education: [...prevEducation, newEducationItem],
+      };
+      console.log('📚 Adding education item:', newEducationItem);
+      console.log('📚 Total education items now:', updated.education.length);
+      console.log('📚 Full education array:', updated.education);
+      saveToLocalStorage(updated);
+      return updated;
+    });
+  }, []);
+
+  const updateEducation = useCallback((id: string, education: Partial<Education>) => {
+    setCvData(prev => {
+      const prevEducation = Array.isArray(prev.education) ? prev.education : [];
+      const updated = {
+        ...prev,
+        education: prevEducation.map(e => (e.id === id ? { ...e, ...education } : e)),
       };
       saveToLocalStorage(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const updateEducation = (id: string, education: Partial<Education>) => {
+  const removeEducation = useCallback((id: string) => {
     setCvData(prev => {
+      const prevEducation = Array.isArray(prev.education) ? prev.education : [];
       const updated = {
         ...prev,
-        education: prev.education.map(e => (e.id === id ? { ...e, ...education } : e)),
+        education: prevEducation.filter(e => e.id !== id),
       };
       saveToLocalStorage(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const removeEducation = (id: string) => {
+  const addWorkExperience = useCallback((experience: Omit<WorkExperience, 'id'>) => {
     setCvData(prev => {
+      const newId = Date.now().toString();
+      const newExperienceItem = { ...experience, id: newId };
+      // Defensive: ensure prev.workExperience is an array
+      const prevExperience = Array.isArray(prev.workExperience) ? prev.workExperience : [];
       const updated = {
         ...prev,
-        education: prev.education.filter(e => e.id !== id),
+        workExperience: [...prevExperience, newExperienceItem],
+      };
+      console.log('💼 Adding work experience item:', newExperienceItem);
+      console.log('💼 Total experience items now:', updated.workExperience.length);
+      console.log('💼 Full experience array:', updated.workExperience);
+      saveToLocalStorage(updated);
+      return updated;
+    });
+  }, []);
+
+  const updateWorkExperience = useCallback((id: string, experience: Partial<WorkExperience>) => {
+    setCvData(prev => {
+      const prevExperience = Array.isArray(prev.workExperience) ? prev.workExperience : [];
+      const updated = {
+        ...prev,
+        workExperience: prevExperience.map(e => (e.id === id ? { ...e, ...experience } : e)),
       };
       saveToLocalStorage(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const addWorkExperience = (experience: Omit<WorkExperience, 'id'>) => {
+  const removeWorkExperience = useCallback((id: string) => {
     setCvData(prev => {
+      const prevExperience = Array.isArray(prev.workExperience) ? prev.workExperience : [];
       const updated = {
         ...prev,
-        workExperience: [...prev.workExperience, { ...experience, id: Date.now().toString() }],
+        workExperience: prevExperience.filter(e => e.id !== id),
       };
       saveToLocalStorage(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const updateWorkExperience = (id: string, experience: Partial<WorkExperience>) => {
+  const updateSkills = useCallback((skills: string[]) => {
     setCvData(prev => {
+      // Defensive: ensure skills is an array
+      const safeSkills = Array.isArray(skills) ? skills : [];
+      const updated = { ...prev, skills: safeSkills };
+      console.log('🛠️ Updating skills:', safeSkills);
+      saveToLocalStorage(updated);
+      return updated;
+    });
+  }, []);
+
+  const addCertification = useCallback((certification: Omit<Certification, 'id'>) => {
+    setCvData(prev => {
+      const newId = Date.now().toString();
+      const newCertificationItem = { ...certification, id: newId };
+      // Defensive: ensure prev.certifications is an array
+      const prevCertifications = Array.isArray(prev.certifications) ? prev.certifications : [];
       const updated = {
         ...prev,
-        workExperience: prev.workExperience.map(e => (e.id === id ? { ...e, ...experience } : e)),
+        certifications: [...prevCertifications, newCertificationItem],
+      };
+      console.log('🏆 Adding certification item:', newCertificationItem);
+      console.log('🏆 Total certification items now:', updated.certifications.length);
+      console.log('🏆 Full certifications array:', updated.certifications);
+      saveToLocalStorage(updated);
+      return updated;
+    });
+  }, []);
+
+  const updateCertification = useCallback((id: string, certification: Partial<Certification>) => {
+    setCvData(prev => {
+      const prevCertifications = Array.isArray(prev.certifications) ? prev.certifications : [];
+      const updated = {
+        ...prev,
+        certifications: prevCertifications.map(c => (c.id === id ? { ...c, ...certification } : c)),
       };
       saveToLocalStorage(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const removeWorkExperience = (id: string) => {
+  const removeCertification = useCallback((id: string) => {
     setCvData(prev => {
+      const prevCertifications = Array.isArray(prev.certifications) ? prev.certifications : [];
       const updated = {
         ...prev,
-        workExperience: prev.workExperience.filter(e => e.id !== id),
+        certifications: prevCertifications.filter(c => c.id !== id),
       };
       saveToLocalStorage(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const updateSkills = (skills: string[]) => {
-    setCvData(prev => {
-      const updated = { ...prev, skills };
-      saveToLocalStorage(updated);
-      return updated;
-    });
-  };
-
-  const addCertification = (certification: Omit<Certification, 'id'>) => {
-    setCvData(prev => {
-      const updated = {
-        ...prev,
-        certifications: [...prev.certifications, { ...certification, id: Date.now().toString() }],
-      };
-      saveToLocalStorage(updated);
-      return updated;
-    });
-  };
-
-  const updateCertification = (id: string, certification: Partial<Certification>) => {
-    setCvData(prev => {
-      const updated = {
-        ...prev,
-        certifications: prev.certifications.map(c => (c.id === id ? { ...c, ...certification } : c)),
-      };
-      saveToLocalStorage(updated);
-      return updated;
-    });
-  };
-
-  const removeCertification = (id: string) => {
-    setCvData(prev => {
-      const updated = {
-        ...prev,
-        certifications: prev.certifications.filter(c => c.id !== id),
-      };
-      saveToLocalStorage(updated);
-      return updated;
-    });
-  };
-
-  const resetCV = () => {
+  const resetCV = useCallback(() => {
     setCvData(defaultCVData);
     localStorage.removeItem('cvData');
-  };
+    console.log('🔄 CV data reset to default');
+  }, []);
 
   return (
     <CVContext.Provider

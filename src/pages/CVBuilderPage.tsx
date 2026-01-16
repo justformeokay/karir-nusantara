@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useCV, Education, WorkExperience, Certification, CVData } from '@/contexts/CVContext';
 import CVPreview from '@/components/cv/CVPreview';
+import CVMiniPreview from '@/components/cv/CVMiniPreview';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -73,15 +74,15 @@ const CVBuilderPage: React.FC = () => {
   const isStepComplete = (stepId: Step): boolean => {
     switch (stepId) {
       case 'personal':
-        return !!(cvData.personalInfo.fullName && cvData.personalInfo.email);
+        return !!(cvData.personalInfo.fullName && cvData.personalInfo.email && cvData.personalInfo.phone);
       case 'education':
         return cvData.education.length > 0;
       case 'experience':
-        return true; // Optional
+        return cvData.workExperience.length > 0;
       case 'skills':
         return cvData.skills.length > 0;
       case 'certifications':
-        return true; // Optional
+        return cvData.certifications.length > 0;
       default:
         return false;
     }
@@ -217,12 +218,18 @@ const CVBuilderPage: React.FC = () => {
             className="hidden lg:block"
           >
             <div className="sticky top-24 space-y-4">
-              <div className="bg-card border border-border rounded-xl p-6">
-                <h3 className="font-semibold text-foreground mb-4">Pratinjau CV</h3>
-                <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden border border-border">
-                  <div className="w-full h-full p-4 text-xs">
-                    <CVPreviewMini data={cvData} />
-                  </div>
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-border">
+                  <h3 className="font-semibold text-foreground">Pratinjau CV (Live)</h3>
+                </div>
+                <div className="p-4">
+                  <CVMiniPreview 
+                    data={cvData}
+                    key={JSON.stringify(cvData)}
+                    onPhotoChange={(photo) => {
+                      updatePersonalInfo({ ...cvData.personalInfo, photo });
+                    }}
+                  />
                 </div>
               </div>
               <Button onClick={() => setIsPreviewOpen(true)} className="w-full">
@@ -352,22 +359,31 @@ const EducationForm: React.FC<{
     field: '',
     startYear: '',
     endYear: '',
-    description: '',
   });
 
+  React.useEffect(() => {
+    console.log('📚 EducationForm - Education data received from context:', data);
+    console.log('📚 Number of education items:', data?.length || 0);
+  }, [data]);
+
   const handleAdd = () => {
+    console.log('📝 handleAdd called with data:', newEducation);
+    
     if (!newEducation.institution || !newEducation.degree) {
+      console.error('❌ Validation failed - missing required fields');
       toast.error('Institusi dan gelar wajib diisi');
       return;
     }
+    
+    console.log('✅ Validation passed, calling onAdd...');
     onAdd(newEducation);
+    
     setNewEducation({
       institution: '',
       degree: '',
       field: '',
       startYear: '',
       endYear: '',
-      description: '',
     });
     toast.success('Pendidikan berhasil ditambahkan');
   };
@@ -423,7 +439,7 @@ const EducationForm: React.FC<{
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Pendidikan Terakhir *</label>
-            <Select value={newEducation.degree} onValueChange={value => setNewEducation({ ...newEducation, degree: value })}>
+            <Select value={newEducation.degree || ''} onValueChange={value => setNewEducation({ ...newEducation, degree: value })}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih tingkat pendidikan" />
               </SelectTrigger>
@@ -492,11 +508,21 @@ const ExperienceForm: React.FC<{
     description: '',
   });
 
+  React.useEffect(() => {
+    console.log('💼 ExperienceForm - Experience data received from context:', data);
+    console.log('💼 Number of experience items:', data?.length || 0);
+  }, [data]);
+
   const handleAdd = () => {
+    console.log('📝 ExperienceForm handleAdd called with data:', newExp);
+    
     if (!newExp.company || !newExp.position) {
+      console.error('❌ Validation failed - missing required fields');
       toast.error('Perusahaan dan posisi wajib diisi');
       return;
     }
+    
+    console.log('✅ Validation passed, calling onAdd...');
     onAdd(newExp);
     setNewExp({
       company: '',
@@ -720,11 +746,21 @@ const CertificationsForm: React.FC<{
     credentialId: '',
   });
 
+  React.useEffect(() => {
+    console.log('🏆 CertificationsForm - Certifications data received from context:', data);
+    console.log('🏆 Number of certification items:', data?.length || 0);
+  }, [data]);
+
   const handleAdd = () => {
+    console.log('📝 CertificationsForm handleAdd called with data:', newCert);
+    
     if (!newCert.name || !newCert.issuer) {
+      console.error('❌ Validation failed - missing required fields');
       toast.error('Nama dan penerbit sertifikasi wajib diisi');
       return;
     }
+    
+    console.log('✅ Validation passed, calling onAdd...');
     onAdd(newCert);
     setNewCert({ name: '', issuer: '', year: '', credentialId: '' });
     toast.success('Sertifikasi berhasil ditambahkan');
@@ -810,48 +846,5 @@ const CertificationsForm: React.FC<{
     </motion.div>
   );
 };
-
-// Mini Preview Component
-const CVPreviewMini: React.FC<{ data: CVData }> = ({ data }) => (
-  <div className="space-y-2">
-    <div className="text-center mb-3">
-      <div className="w-8 h-8 rounded-full bg-primary/20 mx-auto mb-1" />
-      <p className="font-semibold text-foreground truncate">
-        {data.personalInfo.fullName || 'Nama Anda'}
-      </p>
-      <p className="text-muted-foreground truncate">
-        {data.personalInfo.email || 'email@example.com'}
-      </p>
-    </div>
-    {data.personalInfo.summary && (
-      <div className="space-y-1">
-        <div className="h-1.5 bg-muted rounded w-full" />
-        <div className="h-1.5 bg-muted rounded w-4/5" />
-      </div>
-    )}
-    {data.education.length > 0 && (
-      <div className="space-y-1 pt-2">
-        <p className="text-[8px] font-semibold text-primary">PENDIDIKAN</p>
-        <div className="h-1.5 bg-muted rounded w-3/4" />
-      </div>
-    )}
-    {data.workExperience.length > 0 && (
-      <div className="space-y-1 pt-2">
-        <p className="text-[8px] font-semibold text-primary">PENGALAMAN</p>
-        <div className="h-1.5 bg-muted rounded w-3/4" />
-      </div>
-    )}
-    {data.skills.length > 0 && (
-      <div className="pt-2">
-        <p className="text-[8px] font-semibold text-primary">KEAHLIAN</p>
-        <div className="flex flex-wrap gap-1 mt-1">
-          {data.skills.slice(0, 4).map(s => (
-            <span key={s} className="text-[6px] bg-muted px-1 rounded">{s}</span>
-          ))}
-        </div>
-      </div>
-    )}
-  </div>
-);
 
 export default CVBuilderPage;

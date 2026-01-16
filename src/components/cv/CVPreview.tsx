@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Mail, Phone, MapPin, Linkedin, Globe, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -225,6 +225,17 @@ const CVDocument: React.FC<{ data: CVData }> = ({ data }) => (
 );
 
 const CVPreview: React.FC<CVPreviewProps> = ({ isOpen, onClose, data }) => {
+  useEffect(() => {
+    if (isOpen) {
+      console.log('📄 CVPreview - Modal opened with CV Data:', {
+        personalInfo: data.personalInfo,
+        education: data.education,
+        workExperience: data.workExperience,
+        skills: data.skills,
+        certifications: data.certifications,
+      });
+    }
+  }, [isOpen, data]);
   return (
     <AnimatePresence>
       {isOpen && (
