@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, FileText, Briefcase, User, LogOut, UserCircle, Sparkles, Zap } from 'lucide-react';
+import { Menu, X, FileText, Briefcase, User, LogOut, UserCircle, Sparkles, Zap, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/auth/AuthModal';
@@ -53,6 +53,12 @@ const Navbar: React.FC = () => {
                   <span className="text-sm text-muted-foreground">
                     Halo, <span className="font-semibold text-foreground">{user?.name}</span>
                   </span>
+                  <Link to="/lamaran-saya">
+                    <Button variant="outline" size="sm" className="gap-2 border-blue-500/30 bg-blue-50 hover:bg-blue-100 text-blue-700">
+                      <ClipboardList className="w-4 h-4" />
+                      Lamaran Saya
+                    </Button>
+                  </Link>
                   <Link to="/rekomendasi">
                     <Button variant="outline" size="sm" className="gap-2 border-primary/30 hover:bg-primary/10">
                       <Sparkles className="w-4 h-4" />
@@ -117,6 +123,12 @@ const Navbar: React.FC = () => {
                       <p className="text-sm text-muted-foreground">
                         Masuk sebagai <span className="font-semibold text-foreground">{user?.name}</span>
                       </p>
+                      <Link to="/lamaran-saya" className="block mb-2" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full gap-2 border-blue-500/30 bg-blue-50 hover:bg-blue-100 text-blue-700">
+                          <ClipboardList className="w-4 h-4" />
+                          Lamaran Saya
+                        </Button>
+                      </Link>
                       <Link to="/rekomendasi" className="block mb-2" onClick={() => setIsMobileMenuOpen(false)}>
                         <Button variant="outline" className="w-full gap-2">
                           <Sparkles className="w-4 h-4" />
