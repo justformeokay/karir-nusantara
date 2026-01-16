@@ -87,7 +87,7 @@ const CVBuilderPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 mt-6">
             CV Builder
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">

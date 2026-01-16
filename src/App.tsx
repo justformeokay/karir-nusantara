@@ -10,6 +10,7 @@ import HomePage from "@/pages/HomePage";
 import JobsPage from "@/pages/JobsPage";
 import JobDetailPage from "@/pages/JobDetailPage";
 import CVBuilderPage from "@/pages/CVBuilderPage";
+import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
                 <Route path="/lowongan" element={<JobsPage />} />
                 <Route path="/lowongan/:id" element={<JobDetailPage />} />
                 <Route path="/buat-cv" element={<CVBuilderPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

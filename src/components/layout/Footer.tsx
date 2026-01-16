@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Briefcase, Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
+import logo from '@/assets/karir-nusantara.png';
 
 const Footer: React.FC = () => {
   return (
@@ -10,10 +11,7 @@ const Footer: React.FC = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold">KerjaKita</span>
+              <img src={logo} alt="Karir Nusantara" className="h-10 w-auto" />
             </Link>
             <p className="text-background/70 text-sm leading-relaxed">
               Platform pencarian kerja terpercaya di Indonesia. Temukan peluang karir terbaik untuk masa depan Anda.

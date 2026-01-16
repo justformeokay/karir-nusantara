@@ -61,15 +61,22 @@ const JobDetailPage: React.FC = () => {
   };
 
   const handleShare = async () => {
+    // Copy link ke clipboard
+    const jobUrl = window.location.href;
+    try {
+      await navigator.clipboard.writeText(jobUrl);
+      toast.success('Link lowongan berhasil disalin ke clipboard!');
+    } catch {
+      toast.error('Gagal menyalin link');
+    }
+
+    // Jika browser support native share, tunjukkan dialog
     if (navigator.share) {
       await navigator.share({
         title: job.title,
         text: `Lowongan ${job.title} di ${job.company}`,
-        url: window.location.href,
+        url: jobUrl,
       });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success('Link berhasil disalin!');
     }
   };
 
@@ -85,7 +92,7 @@ const JobDetailPage: React.FC = () => {
           >
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mt-5"
             >
               <ArrowLeft className="w-5 h-5" />
               Kembali

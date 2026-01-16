@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, FileText, Briefcase, User, LogOut } from 'lucide-react';
+import { Menu, X, FileText, Briefcase, User, LogOut, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/auth/AuthModal';
+import logo from '@/assets/karir-nusantara.png';
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -26,10 +27,7 @@ const Navbar: React.FC = () => {
           <nav className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold text-foreground">KerjaKita</span>
+              <img src={logo} alt="Karir Nusantara" className="h-10 w-auto" />
             </Link>
 
             {/* Desktop Navigation */}
@@ -55,6 +53,12 @@ const Navbar: React.FC = () => {
                   <span className="text-sm text-muted-foreground">
                     Halo, <span className="font-semibold text-foreground">{user?.name}</span>
                   </span>
+                  <Link to="/profile">
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <UserCircle className="w-4 h-4" />
+                      Profile
+                    </Button>
+                  </Link>
                   <Button variant="ghost" size="sm" onClick={logout}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Keluar
@@ -107,6 +111,12 @@ const Navbar: React.FC = () => {
                       <p className="text-sm text-muted-foreground">
                         Masuk sebagai <span className="font-semibold text-foreground">{user?.name}</span>
                       </p>
+                      <Link to="/profile" className="block mb-2">
+                        <Button variant="outline" className="w-full gap-2">
+                          <UserCircle className="w-4 h-4" />
+                          Profile Saya
+                        </Button>
+                      </Link>
                       <Button variant="outline" className="w-full" onClick={logout}>
                         <LogOut className="w-4 h-4 mr-2" />
                         Keluar

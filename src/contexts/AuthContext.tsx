@@ -4,13 +4,14 @@ interface User {
   id: string;
   email: string;
   name: string;
+  phone?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, phone?: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -41,15 +42,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  const register = async (name: string, email: string, password: string, phone?: string): Promise<boolean> => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     if (name && email && password.length >= 6) {
-      const newUser = {
+      const newUser: User = {
         id: Date.now().toString(),
         email,
         name,
+        ...(phone && { phone }),
       };
       setUser(newUser);
       localStorage.setItem('user', JSON.stringify(newUser));

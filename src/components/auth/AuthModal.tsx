@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, Loader2, Phone, Chrome } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +21,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
   });
 
@@ -33,18 +34,31 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       if (mode === 'login') {
         success = await login(formData.email, formData.password);
       } else {
-        success = await register(formData.name, formData.email, formData.password);
+        success = await register(formData.name, formData.email, formData.password, formData.phone);
       }
 
       if (success) {
         toast.success(mode === 'login' ? 'Berhasil masuk!' : 'Pendaftaran berhasil!');
         onClose();
-        setFormData({ name: '', email: '', password: '' });
+        setFormData({ name: '', email: '', phone: '', password: '' });
       } else {
         toast.error('Terjadi kesalahan. Periksa kembali data Anda.');
       }
     } catch {
       toast.error('Terjadi kesalahan. Silakan coba lagi.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    try {
+      // Placeholder untuk Google authentication
+      // Implementasi sebenarnya akan menggunakan Google OAuth library
+      toast.info('Fitur Google Sign-In akan segera tersedia');
+    } catch {
+      toast.error('Terjadi kesalahan saat login dengan Google');
     } finally {
       setIsLoading(false);
     }
@@ -121,6 +135,23 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
+              {mode === 'register' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Nomor HP</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      type="tel"
+                      placeholder="08xx xxxx xxxx"
+                      value={formData.phone}
+                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                      className="pl-11 h-12"
+                      required={mode === 'register'}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Password</label>
                 <div className="relative">
@@ -155,6 +186,28 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 ) : (
                   'Daftar Sekarang'
                 )}
+              </Button>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-muted"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-background text-muted-foreground">atau</span>
+                </div>
+              </div>
+
+              {/* Google Sign In Button */}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full h-12" 
+                onClick={handleGoogleAuth}
+                disabled={isLoading}
+              >
+                <Chrome className="w-5 h-5 mr-2" />
+                {mode === 'login' ? 'Masuk dengan Google' : 'Daftar dengan Google'}
               </Button>
 
               <div className="text-center text-sm">
