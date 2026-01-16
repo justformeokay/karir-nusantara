@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Mail, Phone, MapPin, Linkedin, Globe, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CVData } from '@/contexts/CVContext';
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font, Image } from '@react-pdf/renderer';
 
 interface CVPreviewProps {
   isOpen: boolean;
@@ -30,7 +30,18 @@ const pdfStyles = StyleSheet.create({
   },
   header: {
     marginBottom: 20,
-    textAlign: 'center',
+    flexDirection: 'row',
+    gap: 20,
+    alignItems: 'flex-start' as any,
+  },
+  headerPhoto: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    objectFit: 'cover' as any,
+  },
+  headerInfo: {
+    flex: 1,
   },
   name: {
     fontSize: 24,
@@ -39,9 +50,8 @@ const pdfStyles = StyleSheet.create({
     color: '#2563EB', // Primary blue
   },
   contactRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
+    flexDirection: 'row' as any,
+    flexWrap: 'wrap' as any,
     gap: 8,
     marginBottom: 4,
   },
@@ -54,7 +64,6 @@ const pdfStyles = StyleSheet.create({
     color: '#374151', // Darker secondary
     marginTop: 12,
     lineHeight: 1.5,
-    textAlign: 'center',
   },
   section: {
     marginTop: 16,
@@ -72,7 +81,7 @@ const pdfStyles = StyleSheet.create({
     marginBottom: 10,
   },
   itemHeader: {
-    flexDirection: 'row',
+    flexDirection: 'row' as any,
     justifyContent: 'space-between',
     marginBottom: 2,
   },
@@ -115,31 +124,43 @@ const CVDocument: React.FC<{ data: CVData }> = ({ data }) => (
     <Page size="A4" style={pdfStyles.page}>
       {/* Header */}
       <View style={pdfStyles.header}>
-        <Text style={pdfStyles.name}>{data.personalInfo.fullName || 'Nama Anda'}</Text>
-        <View style={pdfStyles.contactRow}>
-          {data.personalInfo.email && (
-            <Text style={pdfStyles.contactItem}>{data.personalInfo.email}</Text>
-          )}
-          {data.personalInfo.phone && (
-            <Text style={pdfStyles.contactItem}>• {data.personalInfo.phone}</Text>
-          )}
-          {data.personalInfo.address && (
-            <Text style={pdfStyles.contactItem}>• {data.personalInfo.address}</Text>
-          )}
-        </View>
-        {(data.personalInfo.linkedIn || data.personalInfo.portfolio) && (
-          <View style={pdfStyles.contactRow}>
-            {data.personalInfo.linkedIn && (
-              <Text style={pdfStyles.contactItem}>{data.personalInfo.linkedIn}</Text>
-            )}
-            {data.personalInfo.portfolio && (
-              <Text style={pdfStyles.contactItem}>• {data.personalInfo.portfolio}</Text>
-            )}
+        {/* Photo */}
+        {data.personalInfo.photo && (
+          <View>
+            <Image
+              src={data.personalInfo.photo}
+              style={pdfStyles.headerPhoto}
+            />
           </View>
         )}
-        {data.personalInfo.summary && (
-          <Text style={pdfStyles.summary}>{data.personalInfo.summary}</Text>
-        )}
+        {/* Info */}
+        <View style={pdfStyles.headerInfo}>
+          <Text style={pdfStyles.name}>{data.personalInfo.fullName || 'Nama Anda'}</Text>
+          <View style={pdfStyles.contactRow}>
+            {data.personalInfo.email && (
+              <Text style={pdfStyles.contactItem}>{data.personalInfo.email}</Text>
+            )}
+            {data.personalInfo.phone && (
+              <Text style={pdfStyles.contactItem}>• {data.personalInfo.phone}</Text>
+            )}
+            {data.personalInfo.address && (
+              <Text style={pdfStyles.contactItem}>• {data.personalInfo.address}</Text>
+            )}
+          </View>
+          {(data.personalInfo.linkedIn || data.personalInfo.portfolio) && (
+            <View style={pdfStyles.contactRow}>
+              {data.personalInfo.linkedIn && (
+                <Text style={pdfStyles.contactItem}>{data.personalInfo.linkedIn}</Text>
+              )}
+              {data.personalInfo.portfolio && (
+                <Text style={pdfStyles.contactItem}>• {data.personalInfo.portfolio}</Text>
+              )}
+            </View>
+          )}
+          {data.personalInfo.summary && (
+            <Text style={pdfStyles.summary}>{data.personalInfo.summary}</Text>
+          )}
+        </View>
       </View>
 
       {/* Education */}
@@ -286,52 +307,51 @@ const CVPreview: React.FC<CVPreviewProps> = ({ isOpen, onClose, data }) => {
               <div className="max-w-2xl mx-auto bg-background shadow-lg rounded-lg overflow-hidden">
                 {/* CV Content */}
                 <div className="p-8 md:p-12">
-                  {/* Header */}
-                  <div className="text-center mb-8 pb-6 border-b border-border">
-                    <h1 className="text-3xl font-bold text-primary mb-3">
-                      {data.personalInfo.fullName || 'Nama Anda'}
-                    </h1>
-                    <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
-                      {data.personalInfo.email && (
-                        <span className="flex items-center gap-1">
-                          <Mail className="w-4 h-4" />
-                          {data.personalInfo.email}
-                        </span>
-                      )}
-                      {data.personalInfo.phone && (
-                        <span className="flex items-center gap-1">
-                          <Phone className="w-4 h-4" />
-                          {data.personalInfo.phone}
-                        </span>
-                      )}
-                      {data.personalInfo.address && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          {data.personalInfo.address}
-                        </span>
-                      )}
-                    </div>
-                    {(data.personalInfo.linkedIn || data.personalInfo.portfolio) && (
-                      <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground mt-2">
-                        {data.personalInfo.linkedIn && (
-                          <span className="flex items-center gap-1">
-                            <Linkedin className="w-4 h-4" />
-                            {data.personalInfo.linkedIn}
-                          </span>
-                        )}
-                        {data.personalInfo.portfolio && (
-                          <span className="flex items-center gap-1">
-                            <Globe className="w-4 h-4" />
-                            {data.personalInfo.portfolio}
-                          </span>
-                        )}
+                  {/* Header with Photo */}
+                  <div className="flex items-start gap-6 mb-8 pb-6 border-b border-border">
+                    {/* Photo */}
+                    {data.personalInfo.photo && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={data.personalInfo.photo}
+                          alt="Profile"
+                          className="w-28 h-28 rounded-full object-cover"
+                        />
                       </div>
                     )}
-                    {data.personalInfo.summary && (
-                      <p className="mt-4 text-muted-foreground leading-relaxed">
-                        {data.personalInfo.summary}
-                      </p>
-                    )}
+                    {/* Info */}
+                    <div className="flex-1">
+                      <h1 className="text-3xl font-bold text-primary mb-3">
+                        {data.personalInfo.fullName || 'Nama Anda'}
+                      </h1>
+                      {data.personalInfo.summary && (
+                        <p className="text-sm text-muted-foreground mb-3 italic">
+                          {data.personalInfo.summary}
+                        </p>
+                      )}
+                      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap gap-4">
+                          {data.personalInfo.email && (
+                            <span className="flex items-center gap-1">
+                              <Mail className="w-4 h-4" />
+                              {data.personalInfo.email}
+                            </span>
+                          )}
+                          {data.personalInfo.phone && (
+                            <span className="flex items-center gap-1">
+                              <Phone className="w-4 h-4" />
+                              {data.personalInfo.phone}
+                            </span>
+                          )}
+                          {data.personalInfo.address && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {data.personalInfo.address}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Education */}

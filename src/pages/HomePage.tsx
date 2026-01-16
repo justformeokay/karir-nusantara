@@ -333,6 +333,166 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Company Recruitment Section */}
+      <section className="py-16 md:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-primary">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 text-primary-foreground rounded-full text-sm font-medium mb-6">
+                <Building2 className="w-4 h-4" />
+                Untuk Perusahaan
+              </span>
+              
+              <h2 className="text-3xl md:text-4xl font-bold text-background mb-6">
+                Temukan Talent Terbaik untuk Perusahaan Anda
+              </h2>
+              
+              <p className="text-lg text-background/80 mb-8 leading-relaxed">
+                Bergabunglah dengan ribuan perusahaan yang telah menemukan talenta terbaik melalui platform kami. Posting lowongan, temukan kandidat berkualitas, dan kelola rekrutmen dengan mudah.
+              </p>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                    <CheckCircle className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-background mb-1">Akses ke Database Kandidat Luas</h3>
+                    <p className="text-background/70">Lebih dari 1 juta pencari kerja aktif di platform kami</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                    <CheckCircle className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-background mb-1">Tools Rekrutmen yang Powerful</h3>
+                    <p className="text-background/70">Filter kandidat, kelola lamaran, dan komunikasi dalam satu dashboard</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                    <CheckCircle className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-background mb-1">Posting Lowongan Unlimited</h3>
+                    <p className="text-background/70">Posting sebanyak mungkin lowongan tanpa batasan jumlah</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                    <CheckCircle className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-background mb-1">Dedicated Support Team</h3>
+                    <p className="text-background/70">Tim support siap membantu Anda 24/7</p>
+                  </div>
+                </div>
+              </div>
+
+              <a href="https://company.karirnusantara.com" target="_blank" rel="noopener noreferrer">
+                <Button size="lg" variant="secondary" className="font-semibold gap-2">
+                  <Building2 className="w-5 h-5" />
+                  Daftar Sebagai Perusahaan
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </a>
+            </motion.div>
+
+            {/* Card Visual */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative"
+            >
+              {/* Main Card */}
+              <div className="relative z-10 bg-white rounded-2xl shadow-2xl overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold">Recruitment Dashboard</h3>
+                      <p className="text-white/80 text-sm">Kelola semua lamaran dengan mudah</p>
+                    </div>
+                    <Building2 className="w-8 h-8 opacity-50" />
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-4">
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-3 mb-6">
+                    <div className="p-3 bg-slate-50 rounded-lg text-center">
+                      <p className="text-2xl font-bold text-primary">142</p>
+                      <p className="text-xs text-slate-600">Lamaran Baru</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-lg text-center">
+                      <p className="text-2xl font-bold text-primary">28</p>
+                      <p className="text-xs text-slate-600">Lowongan Aktif</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-lg text-center">
+                      <p className="text-2xl font-bold text-primary">12</p>
+                      <p className="text-xs text-slate-600">Hired</p>
+                    </div>
+                  </div>
+
+                  {/* Recent Applications */}
+                  <div className="border-t border-slate-200 pt-4">
+                    <h4 className="text-sm font-semibold text-slate-900 mb-3">Lamaran Terbaru</h4>
+                    <div className="space-y-2">
+                      {[
+                        { name: 'Budi Santoso', position: 'Senior Developer', time: '2 jam lalu' },
+                        { name: 'Siti Nurhaliza', position: 'UI/UX Designer', time: '5 jam lalu' },
+                        { name: 'Roni Wijaya', position: 'Product Manager', time: '1 hari lalu' },
+                      ].map((app, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                            <Users className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 truncate">{app.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{app.position}</p>
+                          </div>
+                          <p className="text-xs text-slate-400">{app.time}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* CTA Button */}
+                  <button className="w-full mt-4 py-2 bg-primary hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                    Lihat Semua Lamaran →
+                  </button>
+                </div>
+              </div>
+
+              {/* Floating Badge */}
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-primary/40 to-primary/20 rounded-2xl flex items-center justify-center text-white z-0 shadow-lg"
+              >
+                <div className="text-center">
+                  <Briefcase className="w-8 h-8 mx-auto mb-1" />
+                  <p className="text-xs font-semibold">Efisien</p>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
@@ -343,7 +503,7 @@ const HomePage: React.FC = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Cara Kerja KerjaKita
+              Cara Kerja Karir Nusantara
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Tiga langkah mudah menuju karir impian Anda

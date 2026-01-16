@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Eye, EyeOff, Loader2, Phone, Chrome } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, Loader2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import googleIcon from '@/assets/google.png';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -206,7 +207,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 onClick={handleGoogleAuth}
                 disabled={isLoading}
               >
-                <Chrome className="w-5 h-5 mr-2" />
+                <img src={googleIcon} alt="Google" className="w-5 h-5 mr-2" />
                 {mode === 'login' ? 'Masuk dengan Google' : 'Daftar dengan Google'}
               </Button>
 
