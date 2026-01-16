@@ -45,6 +45,9 @@ const steps: { id: Step; label: string; icon: React.ElementType }[] = [
 const CVBuilderPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<Step>('personal');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [unsavedEducation, setUnsavedEducation] = useState<any>(null);
+  const [unsavedExperience, setUnsavedExperience] = useState<any>(null);
+  const [unsavedCertification, setUnsavedCertification] = useState<any>(null);
   const {
     cvData,
     updatePersonalInfo,
@@ -60,6 +63,21 @@ const CVBuilderPage: React.FC = () => {
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
 
   const goNext = () => {
+    // Auto-save unsaved data sebelum pindah step
+    if (currentStep === 'education' && unsavedEducation) {
+      addEducation(unsavedEducation);
+      setUnsavedEducation(null);
+      toast.success('Pendidikan otomatis tersimpan');
+    } else if (currentStep === 'experience' && unsavedExperience) {
+      addWorkExperience(unsavedExperience);
+      setUnsavedExperience(null);
+      toast.success('Pengalaman kerja otomatis tersimpan');
+    } else if (currentStep === 'certifications' && unsavedCertification) {
+      addCertification(unsavedCertification);
+      setUnsavedCertification(null);
+      toast.success('Sertifikasi otomatis tersimpan');
+    }
+
     if (currentStepIndex < steps.length - 1) {
       setCurrentStep(steps[currentStepIndex + 1].id);
     }
@@ -161,6 +179,8 @@ const CVBuilderPage: React.FC = () => {
                     data={cvData.education}
                     onAdd={addEducation}
                     onRemove={removeEducation}
+                    unsaved={unsavedEducation}
+                    setUnsaved={setUnsavedEducation}
                   />
                 )}
                 {currentStep === 'experience' && (
@@ -168,6 +188,8 @@ const CVBuilderPage: React.FC = () => {
                     data={cvData.workExperience}
                     onAdd={addWorkExperience}
                     onRemove={removeWorkExperience}
+                    unsaved={unsavedExperience}
+                    setUnsaved={setUnsavedExperience}
                   />
                 )}
                 {currentStep === 'skills' && (
@@ -181,6 +203,8 @@ const CVBuilderPage: React.FC = () => {
                     data={cvData.certifications}
                     onAdd={addCertification}
                     onRemove={removeCertification}
+                    unsaved={unsavedCertification}
+                    setUnsaved={setUnsavedCertification}
                   />
                 )}
               </AnimatePresence>
@@ -196,10 +220,17 @@ const CVBuilderPage: React.FC = () => {
                   Sebelumnya
                 </Button>
                 {currentStepIndex < steps.length - 1 ? (
-                  <Button onClick={goNext}>
-                    Selanjutnya
-                    <ChevronRight className="w-5 h-5 ml-1" />
-                  </Button>
+                  <div className="flex flex-col items-end gap-2">
+                    <Button onClick={goNext}>
+                      Selanjutnya
+                      <ChevronRight className="w-5 h-5 ml-1" />
+                    </Button>
+                    {(unsavedEducation || unsavedExperience || unsavedCertification) && (
+                      <span className="text-xs text-amber-600 font-medium">
+                        ⚠️ Data yang belum tersimpan akan otomatis disimpan
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <Button onClick={() => setIsPreviewOpen(true)}>
                     <Eye className="w-5 h-5 mr-2" />
@@ -352,7 +383,9 @@ const EducationForm: React.FC<{
   data: Education[];
   onAdd: (education: Omit<Education, 'id'>) => void;
   onRemove: (id: string) => void;
-}> = ({ data, onAdd, onRemove }) => {
+  unsaved?: any;
+  setUnsaved?: (data: any) => void;
+}> = ({ data, onAdd, onRemove, unsaved, setUnsaved }) => {
   const [newEducation, setNewEducation] = useState({
     institution: '',
     degree: '',
@@ -377,6 +410,7 @@ const EducationForm: React.FC<{
     
     console.log('✅ Validation passed, calling onAdd...');
     onAdd(newEducation);
+    setUnsaved?.(null);
     
     setNewEducation({
       institution: '',
@@ -386,6 +420,12 @@ const EducationForm: React.FC<{
       endYear: '',
     });
     toast.success('Pendidikan berhasil ditambahkan');
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    const updated = { ...newEducation, [field]: value };
+    setNewEducation(updated);
+    setUnsaved?.(updated);
   };
 
   return (
@@ -434,12 +474,12 @@ const EducationForm: React.FC<{
             <Input
               placeholder="Universitas Indonesia"
               value={newEducation.institution}
-              onChange={e => setNewEducation({ ...newEducation, institution: e.target.value })}
+              onChange={e => handleInputChange('institution', e.target.value)}
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Pendidikan Terakhir *</label>
-            <Select value={newEducation.degree || ''} onValueChange={value => setNewEducation({ ...newEducation, degree: value })}>
+            <Select value={newEducation.degree || ''} onValueChange={value => handleInputChange('degree', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih tingkat pendidikan" />
               </SelectTrigger>
@@ -462,7 +502,7 @@ const EducationForm: React.FC<{
             <Input
               placeholder="Teknik Informatika"
               value={newEducation.field}
-              onChange={e => setNewEducation({ ...newEducation, field: e.target.value })}
+              onChange={e => handleInputChange('field', e.target.value)}
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -471,7 +511,7 @@ const EducationForm: React.FC<{
               <Input
                 placeholder="2018"
                 value={newEducation.startYear}
-                onChange={e => setNewEducation({ ...newEducation, startYear: e.target.value })}
+                onChange={e => handleInputChange('startYear', e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -479,11 +519,16 @@ const EducationForm: React.FC<{
               <Input
                 placeholder="2022"
                 value={newEducation.endYear}
-                onChange={e => setNewEducation({ ...newEducation, endYear: e.target.value })}
+                onChange={e => handleInputChange('endYear', e.target.value)}
               />
             </div>
           </div>
         </div>
+        {unsaved && (
+          <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 flex items-center gap-2">
+            <span>⚠️ Ada data yang belum tersimpan. Klik tombol di bawah atau "Selanjutnya" untuk menyimpan.</span>
+          </div>
+        )}
         <Button onClick={handleAdd} variant="outline" className="w-full">
           <Plus className="w-4 h-4 mr-2" />
           Tambah Pendidikan
@@ -498,7 +543,9 @@ const ExperienceForm: React.FC<{
   data: WorkExperience[];
   onAdd: (experience: Omit<WorkExperience, 'id'>) => void;
   onRemove: (id: string) => void;
-}> = ({ data, onAdd, onRemove }) => {
+  unsaved?: any;
+  setUnsaved?: (data: any) => void;
+}> = ({ data, onAdd, onRemove, unsaved, setUnsaved }) => {
   const [newExp, setNewExp] = useState({
     company: '',
     position: '',
@@ -524,6 +571,7 @@ const ExperienceForm: React.FC<{
     
     console.log('✅ Validation passed, calling onAdd...');
     onAdd(newExp);
+    setUnsaved?.(null);
     setNewExp({
       company: '',
       position: '',
@@ -533,6 +581,12 @@ const ExperienceForm: React.FC<{
       description: '',
     });
     toast.success('Pengalaman kerja berhasil ditambahkan');
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    const updated = { ...newExp, [field]: value };
+    setNewExp(updated);
+    setUnsaved?.(updated);
   };
 
   return (
@@ -579,7 +633,7 @@ const ExperienceForm: React.FC<{
             <Input
               placeholder="PT. Maju Bersama"
               value={newExp.company}
-              onChange={e => setNewExp({ ...newExp, company: e.target.value })}
+              onChange={e => handleInputChange('company', e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -587,7 +641,7 @@ const ExperienceForm: React.FC<{
             <Input
               placeholder="Software Engineer"
               value={newExp.position}
-              onChange={e => setNewExp({ ...newExp, position: e.target.value })}
+              onChange={e => handleInputChange('position', e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -595,7 +649,7 @@ const ExperienceForm: React.FC<{
             <Input
               placeholder="Jan 2022"
               value={newExp.startDate}
-              onChange={e => setNewExp({ ...newExp, startDate: e.target.value })}
+              onChange={e => handleInputChange('startDate', e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -603,7 +657,7 @@ const ExperienceForm: React.FC<{
             <Input
               placeholder="Des 2023"
               value={newExp.endDate}
-              onChange={e => setNewExp({ ...newExp, endDate: e.target.value })}
+              onChange={e => handleInputChange('endDate', e.target.value)}
               disabled={newExp.isCurrentJob}
             />
           </div>
@@ -613,10 +667,15 @@ const ExperienceForm: React.FC<{
           <Textarea
             placeholder="Jelaskan tanggung jawab dan pencapaian Anda..."
             value={newExp.description}
-            onChange={e => setNewExp({ ...newExp, description: e.target.value })}
+            onChange={e => handleInputChange('description', e.target.value)}
             rows={3}
           />
         </div>
+        {unsaved && (
+          <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 flex items-center gap-2">
+            <span>⚠️ Ada data yang belum tersimpan. Klik tombol di bawah atau "Selanjutnya" untuk menyimpan.</span>
+          </div>
+        )}
         <Button onClick={handleAdd} variant="outline" className="w-full">
           <Plus className="w-4 h-4 mr-2" />
           Tambah Pengalaman
@@ -738,7 +797,9 @@ const CertificationsForm: React.FC<{
   data: Certification[];
   onAdd: (certification: Omit<Certification, 'id'>) => void;
   onRemove: (id: string) => void;
-}> = ({ data, onAdd, onRemove }) => {
+  unsaved?: any;
+  setUnsaved?: (data: any) => void;
+}> = ({ data, onAdd, onRemove, unsaved, setUnsaved }) => {
   const [newCert, setNewCert] = useState({
     name: '',
     issuer: '',
@@ -762,8 +823,15 @@ const CertificationsForm: React.FC<{
     
     console.log('✅ Validation passed, calling onAdd...');
     onAdd(newCert);
+    setUnsaved?.(null);
     setNewCert({ name: '', issuer: '', year: '', credentialId: '' });
     toast.success('Sertifikasi berhasil ditambahkan');
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    const updated = { ...newCert, [field]: value };
+    setNewCert(updated);
+    setUnsaved?.(updated);
   };
 
   return (
@@ -810,7 +878,7 @@ const CertificationsForm: React.FC<{
             <Input
               placeholder="Google Data Analytics"
               value={newCert.name}
-              onChange={e => setNewCert({ ...newCert, name: e.target.value })}
+              onChange={e => handleInputChange('name', e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -818,7 +886,7 @@ const CertificationsForm: React.FC<{
             <Input
               placeholder="Google"
               value={newCert.issuer}
-              onChange={e => setNewCert({ ...newCert, issuer: e.target.value })}
+              onChange={e => handleInputChange('issuer', e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -826,7 +894,7 @@ const CertificationsForm: React.FC<{
             <Input
               placeholder="2023"
               value={newCert.year}
-              onChange={e => setNewCert({ ...newCert, year: e.target.value })}
+              onChange={e => handleInputChange('year', e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -834,10 +902,15 @@ const CertificationsForm: React.FC<{
             <Input
               placeholder="ABC123XYZ"
               value={newCert.credentialId}
-              onChange={e => setNewCert({ ...newCert, credentialId: e.target.value })}
+              onChange={e => handleInputChange('credentialId', e.target.value)}
             />
           </div>
         </div>
+        {unsaved && (
+          <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 flex items-center gap-2">
+            <span>⚠️ Ada data yang belum tersimpan. Klik tombol di bawah atau "Selanjutnya" untuk menyimpan.</span>
+          </div>
+        )}
         <Button onClick={handleAdd} variant="outline" className="w-full">
           <Plus className="w-4 h-4 mr-2" />
           Tambah Sertifikasi
