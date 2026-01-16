@@ -161,6 +161,15 @@ const ProfilePage: React.FC = () => {
                     <Edit2 className="w-4 h-4" />
                     Edit Profile
                   </Button>
+                  <Link to="/rekomendasi">
+                    <Button
+                      variant="default"
+                      className="flex-1 md:flex-none gap-2"
+                    >
+                      <Briefcase className="w-4 h-4" />
+                      Rekomendasi
+                    </Button>
+                  </Link>
                   <Button
                     variant="destructive"
                     onClick={handleLogout}
@@ -289,16 +298,18 @@ const ProfilePage: React.FC = () => {
                   </p>
                   
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Link to="/lowongan">
+                    <Link to="/rekomendasi">
                       <Button size="lg" className="gap-2 w-full sm:w-auto">
                         <Briefcase className="w-5 h-5" />
-                        Jelajahi Lowongan
+                        Lihat Rekomendasi
                       </Button>
                     </Link>
-                    <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
-                      <ArrowRight className="w-5 h-5" />
-                      Lihat Tips Melamar
-                    </Button>
+                    <Link to="/lowongan">
+                      <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
+                        <ArrowRight className="w-5 h-5" />
+                        Lihat Tips Melamar
+                      </Button>
+                    </Link>
                   </div>
                 </motion.div>
               ) : (
@@ -398,10 +409,12 @@ const ProfilePage: React.FC = () => {
                         Jelajahi Lowongan
                       </Button>
                     </Link>
-                    <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
-                      <ArrowRight className="w-5 h-5" />
-                      Rekomendasi Untuk Anda
-                    </Button>
+                    <Link to="/tips-melamar">
+                      <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
+                        <ArrowRight className="w-5 h-5" />
+                        Rekomendasi Untuk Anda
+                      </Button>
+                    </Link>
                   </div>
                 </motion.div>
               ) : (

@@ -11,6 +11,8 @@ import JobsPage from "@/pages/JobsPage";
 import JobDetailPage from "@/pages/JobDetailPage";
 import CVBuilderPage from "@/pages/CVBuilderPage";
 import ProfilePage from "@/pages/ProfilePage";
+import ApplicationTipsPage from "@/pages/ApplicationTipsPage";
+import RecommendedJobsPage from "@/pages/RecommendedJobsPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
                 <Route path="/lowongan/:id" element={<JobDetailPage />} />
                 <Route path="/buat-cv" element={<CVBuilderPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/tips-melamar" element={<ApplicationTipsPage />} />
+                <Route path="/rekomendasi" element={<RecommendedJobsPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

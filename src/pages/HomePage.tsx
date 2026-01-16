@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/jobs/SearchBar';
 import JobCard from '@/components/jobs/JobCard';
 import { mockJobs, jobCategories } from '@/data/jobs';
-import heroImage from '@/assets/hero-image.jpg';
+import heroImage from '@/assets/hero-image.png';
 
 const HomePage: React.FC = () => {
   const featuredJobs = mockJobs.slice(0, 4);
@@ -43,13 +43,13 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-r from-slate-800 via-slate-700 to-teal-600">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
             src={heroImage}
             alt="Profesional Indonesia"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-foreground/90 via-foreground/70 to-foreground/40" />
         </div>
@@ -68,7 +68,7 @@ const HomePage: React.FC = () => {
               </span>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-background leading-tight mb-6">
                 Temukan Karir Impian Anda di{' '}
-                <span className="text-blue-400">KerjaKita</span>
+                <span className="text-blue-400">Karir Nusantara</span>
               </h1>
               <p className="text-lg md:text-xl text-background/80 mb-8 leading-relaxed">
                 Ribuan lowongan dari perusahaan terbaik Indonesia. Cari kerja, buat CV profesional, dan lamar dengan mudah.
@@ -290,6 +290,46 @@ const HomePage: React.FC = () => {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Tingkatkan Peluang Diterima
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Pelajari tips dan strategi melamar yang efektif untuk meningkatkan peluang diterima oleh perusahaan impian
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-8 md:p-12 text-center"
+          >
+            <BookOpen className="w-12 h-12 text-primary mx-auto mb-6" />
+            <h3 className="text-2xl font-bold text-foreground mb-3">
+              Panduan Lengkap Melamar Kerja
+            </h3>
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+              Dari persiapan CV, memilih lowongan yang tepat, hingga persiapan interview. Semua yang Anda butuhkan untuk sukses melamar kerja ada di sini.
+            </p>
+            <Link to="/tips-melamar">
+              <Button size="lg" className="gap-2">
+                <Megaphone className="w-5 h-5" />
+                Baca Tips & Trik Melamar
+              </Button>
+            </Link>
+          </motion.div>
         </div>
       </section>
 

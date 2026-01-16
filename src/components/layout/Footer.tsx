@@ -37,22 +37,22 @@ const Footer: React.FC = () => {
             <h3 className="font-semibold text-lg mb-4">Tautan Cepat</h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/lowongan" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <Link to="/lowongan" className="text-background/70 hover:text-white transition-colors text-sm">
                   Cari Lowongan
                 </Link>
               </li>
               <li>
-                <Link to="/buat-cv" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <Link to="/buat-cv" className="text-background/70 hover:text-white transition-colors text-sm">
                   Buat CV
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="#" className="text-background/70 hover:text-white transition-colors text-sm">
                   Tips Karir
                 </a>
               </li>
               <li>
-                <a href="#" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="#" className="text-background/70 hover:text-white transition-colors text-sm">
                   FAQ
                 </a>
               </li>
@@ -64,22 +64,22 @@ const Footer: React.FC = () => {
             <h3 className="font-semibold text-lg mb-4">Kategori Populer</h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/lowongan?category=Teknologi" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <Link to="/lowongan?category=Teknologi" className="text-background/70 hover:text-white transition-colors text-sm">
                   Teknologi
                 </Link>
               </li>
               <li>
-                <Link to="/lowongan?category=Marketing" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <Link to="/lowongan?category=Marketing" className="text-background/70 hover:text-white transition-colors text-sm">
                   Marketing
                 </Link>
               </li>
               <li>
-                <Link to="/lowongan?category=Desain" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <Link to="/lowongan?category=Desain" className="text-background/70 hover:text-white transition-colors text-sm">
                   Desain
                 </Link>
               </li>
               <li>
-                <Link to="/lowongan?category=Keuangan" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <Link to="/lowongan?category=Keuangan" className="text-background/70 hover:text-white transition-colors text-sm">
                   Keuangan
                 </Link>
               </li>
@@ -108,13 +108,13 @@ const Footer: React.FC = () => {
 
         <div className="mt-12 pt-8 border-t border-background/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-background/50 text-sm">
-            © 2024 KerjaKita. Hak cipta dilindungi.
+            © 2024 Karir Nusantara. Hak cipta dilindungi.
           </p>
           <div className="flex items-center gap-6">
-            <a href="#" className="text-background/50 hover:text-primary text-sm transition-colors">
+            <a href="#" className="text-background/50 hover:text-white text-sm transition-colors">
               Kebijakan Privasi
             </a>
-            <a href="#" className="text-background/50 hover:text-primary text-sm transition-colors">
+            <a href="#" className="text-background/50 hover:text-white text-sm transition-colors">
               Syarat & Ketentuan
             </a>
           </div>
