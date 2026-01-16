@@ -23,6 +23,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { mockJobs } from '@/data/jobs';
 import { toast } from 'sonner';
@@ -45,6 +54,7 @@ const ProfilePage: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<'applications' | 'saved' | 'cv'>('applications');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -69,8 +79,13 @@ const ProfilePage: React.FC = () => {
   }
 
   const handleLogout = () => {
+    setIsLogoutDialogOpen(true);
+  };
+
+  const confirmLogout = () => {
     logout();
     toast.success('Berhasil logout');
+    setIsLogoutDialogOpen(false);
     navigate('/');
   };
 
@@ -600,6 +615,24 @@ const ProfilePage: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Logout</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin keluar? Anda perlu login kembali untuk mengakses profil Anda.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-2 justify-end">
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmLogout} className="bg-destructive hover:bg-destructive/90">
+              Keluar
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

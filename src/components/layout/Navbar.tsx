@@ -3,6 +3,15 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, FileText, Briefcase, User, LogOut, UserCircle, Sparkles, Zap, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/auth/AuthModal';
 import logo from '@/assets/karir-nusantara.png';
@@ -10,6 +19,7 @@ import logo from '@/assets/karir-nusantara.png';
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
 
@@ -19,6 +29,12 @@ const Navbar: React.FC = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleConfirmLogout = () => {
+    logout();
+    setIsLogoutDialogOpen(false);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -36,7 +52,7 @@ const Navbar: React.FC = () => {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary ${
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-blue-600 ${
                     isActive(link.to) ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 >
@@ -50,9 +66,7 @@ const Navbar: React.FC = () => {
             <div className="hidden md:flex items-center gap-4">
               {isAuthenticated ? (
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">
-                    Halo, <span className="font-semibold text-foreground">{user?.name}</span>
-                  </span>
+                  
                   <Link to="/lamaran-saya">
                     <Button variant="outline" size="sm" className="gap-2 border-blue-500/30 bg-blue-50 hover:bg-blue-100 text-blue-700">
                       <ClipboardList className="w-4 h-4" />
@@ -71,7 +85,7 @@ const Navbar: React.FC = () => {
                       Profile
                     </Button>
                   </Link>
-                  <Button variant="ghost" size="sm" onClick={logout}>
+                  <Button variant="ghost" size="sm" onClick={() => setIsLogoutDialogOpen(true)}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Keluar
                   </Button>
@@ -141,7 +155,7 @@ const Navbar: React.FC = () => {
                           Profile Saya
                         </Button>
                       </Link>
-                      <Button variant="outline" className="w-full" onClick={logout}>
+                      <Button variant="outline" className="w-full" onClick={() => setIsLogoutDialogOpen(true)}>
                         <LogOut className="w-4 h-4 mr-2" />
                         Keluar
                       </Button>
@@ -160,6 +174,24 @@ const Navbar: React.FC = () => {
       </header>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Logout</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin keluar? Anda perlu login kembali untuk mengakses akun Anda.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-2 justify-end">
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmLogout} className="bg-destructive hover:bg-destructive/90">
+              Keluar
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
