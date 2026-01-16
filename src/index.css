@@ -6,34 +6,34 @@
 
 @layer base {
   :root {
-    /* Modern Teal Job Portal Theme */
-    --background: 0 0% 100%;
-    --foreground: 220 20% 10%;
+    /* Flat Design Color Palette - Modern Job Portal */
+    --background: 0 0% 97.6%;
+    --foreground: 217 32.6% 17.5%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 217 32.6% 17.5%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 217 32.6% 17.5%;
 
-    /* Primary - Professional Teal */
-    --primary: 174 72% 40%;
+    /* Primary - Flat Blue */
+    --primary: 217 91.2% 59.8%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 174 72% 95%;
-    --primary-dark: 174 72% 30%;
+    --primary-light: 217 91.2% 95%;
+    --primary-dark: 216 94.3% 37.5%;
 
-    /* Secondary - Warm Orange Accent */
-    --secondary: 24 95% 53%;
+    /* Accent - Emerald Green (CTA) */
+    --secondary: 160 84.1% 39.4%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 0 0% 90.2%;
+    --muted-foreground: 217 14.3% 42%;
 
-    --accent: 174 72% 95%;
-    --accent-foreground: 174 72% 30%;
+    --accent: 160 84.1% 39.4%;
+    --accent-foreground: 0 0% 100%;
 
     /* Success Green */
-    --success: 142 76% 36%;
+    --success: 160 84.1% 39.4%;
     --success-foreground: 0 0% 100%;
 
     /* Warning */
@@ -43,72 +43,72 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 174 72% 40%;
+    --border: 0 0% 90.2%;
+    --input: 0 0% 90.2%;
+    --ring: 217 91.2% 59.8%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(174 72% 40%) 0%, hsl(174 72% 30%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(174 72% 45%) 0%, hsl(190 70% 40%) 50%, hsl(200 60% 45%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
+    /* Flat design - no gradients */
+    --gradient-primary: #2563EB;
+    --gradient-hero: #2563EB;
+    --gradient-card: #FFFFFF;
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(220 20% 10% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(220 20% 10% / 0.1), 0 2px 4px -2px hsl(220 20% 10% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(220 20% 10% / 0.1), 0 4px 6px -4px hsl(220 20% 10% / 0.1);
-    --shadow-xl: 0 20px 25px -5px hsl(220 20% 10% / 0.1), 0 8px 10px -6px hsl(220 20% 10% / 0.1);
-    --shadow-card: 0 2px 8px -2px hsl(174 72% 40% / 0.1), 0 4px 16px -4px hsl(174 72% 40% / 0.08);
-    --shadow-card-hover: 0 8px 24px -4px hsl(174 72% 40% / 0.15), 0 12px 32px -8px hsl(174 72% 40% / 0.12);
+    /* Soft shadows - low opacity */
+    --shadow-sm: 0 1px 2px 0 hsl(217 32.6% 17.5% / 0.04);
+    --shadow-md: 0 4px 6px -1px hsl(217 32.6% 17.5% / 0.07), 0 2px 4px -2px hsl(217 32.6% 17.5% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(217 32.6% 17.5% / 0.08), 0 4px 6px -4px hsl(217 32.6% 17.5% / 0.06);
+    --shadow-xl: 0 20px 25px -5px hsl(217 32.6% 17.5% / 0.09), 0 8px 10px -6px hsl(217 32.6% 17.5% / 0.07);
+    --shadow-card: 0 1px 3px 0 hsl(217 32.6% 17.5% / 0.06);
+    --shadow-card-hover: 0 4px 12px -2px hsl(217 32.6% 17.5% / 0.1);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 174 72% 40%;
+    --sidebar-background: 0 0% 97.6%;
+    --sidebar-foreground: 217 32.6% 17.5%;
+    --sidebar-primary: 217 91.2% 59.8%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 84.1% 39.4%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 90.2%;
+    --sidebar-ring: 217 91.2% 59.8%;
   }
 
   .dark {
-    --background: 220 20% 8%;
-    --foreground: 0 0% 98%;
+    --background: 217 32.6% 17.5%;
+    --foreground: 0 0% 97.6%;
 
-    --card: 220 18% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 217 32.6% 25%;
+    --card-foreground: 0 0% 97.6%;
 
-    --popover: 220 18% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 217 32.6% 25%;
+    --popover-foreground: 0 0% 97.6%;
 
-    --primary: 174 72% 50%;
-    --primary-foreground: 220 20% 8%;
+    --primary: 217 91.2% 59.8%;
+    --primary-foreground: 217 32.6% 17.5%;
 
-    --secondary: 24 95% 53%;
+    --secondary: 160 84.1% 39.4%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 14% 18%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 217 32.6% 25%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 174 72% 20%;
-    --accent-foreground: 174 72% 90%;
+    --accent: 160 84.1% 39.4%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 13% 20%;
-    --input: 220 13% 20%;
-    --ring: 174 72% 50%;
+    --border: 217 32.6% 30%;
+    --input: 217 32.6% 30%;
+    --ring: 217 91.2% 59.8%;
 
-    --sidebar-background: 220 20% 10%;
+    --sidebar-background: 217 32.6% 20%;
     --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 174 72% 50%;
+    --sidebar-primary: 217 91.2% 59.8%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 18%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 220 13% 20%;
-    --sidebar-ring: 174 72% 50%;
+    --sidebar-accent: 160 84.1% 39.4%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 217 32.6% 30%;
+    --sidebar-ring: 217 91.2% 59.8%;
   }
 }
 
@@ -133,11 +133,11 @@
   }
 
   .gradient-primary {
-    background: var(--gradient-primary);
+    background: #2563EB;
   }
 
   .gradient-hero {
-    background: var(--gradient-hero);
+    background: #2563EB;
   }
 
   .shadow-card {
@@ -158,6 +158,39 @@
 
   .animate-scale-in {
     animation: scaleIn 0.3s ease-out forwards;
+  }
+
+  /* Flat design button styles */
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors;
+  }
+
+  .btn-primary-light {
+    @apply bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-2 px-4 rounded transition-colors;
+  }
+
+  .btn-accent {
+    @apply bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2 px-4 rounded transition-colors;
+  }
+
+  .text-primary {
+    @apply text-gray-900;
+  }
+
+  .text-secondary {
+    @apply text-gray-700;
+  }
+
+  .text-muted {
+    @apply text-gray-500;
+  }
+
+  .border-soft {
+    @apply border border-gray-200;
+  }
+
+  .card-flat {
+    @apply bg-white rounded border border-gray-200 shadow-card hover:shadow-card-hover transition-shadow;
   }
 }
 

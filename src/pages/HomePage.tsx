@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, FileText, Users, Building2, TrendingUp, CheckCircle, ArrowRight, Briefcase, Star } from 'lucide-react';
+import { Search, FileText, Users, Building2, TrendingUp, CheckCircle, ArrowRight, Briefcase, Star, Download, Code2, Megaphone, Landmark, Palette, Headphones, UserCheck, ShoppingCart, Cog, BookOpen, Heart, HardHat, Factory } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/jobs/SearchBar';
 import JobCard from '@/components/jobs/JobCard';
@@ -17,6 +17,21 @@ const HomePage: React.FC = () => {
     { icon: Users, value: '1 Juta+', label: 'Pencari Kerja' },
     { icon: TrendingUp, value: '50,000+', label: 'Penempatan' },
   ];
+
+  const categoryIcons: { [key: string]: typeof Briefcase } = {
+    'Teknologi': Code2,
+    'Marketing': Megaphone,
+    'Keuangan': Landmark,
+    'Desain': Palette,
+    'Customer Service': Headphones,
+    'Human Resources': UserCheck,
+    'Sales': ShoppingCart,
+    'Operasional': Cog,
+    'Pendidikan': BookOpen,
+    'Kesehatan': Heart,
+    'Konstruksi': HardHat,
+    'Manufaktur': Factory,
+  };
 
   const benefits = [
     'Cari lowongan tanpa perlu login',
@@ -53,7 +68,7 @@ const HomePage: React.FC = () => {
               </span>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-background leading-tight mb-6">
                 Temukan Karir Impian Anda di{' '}
-                <span className="text-primary">KerjaKita</span>
+                <span className="text-blue-400">KerjaKita</span>
               </h1>
               <p className="text-lg md:text-xl text-background/80 mb-8 leading-relaxed">
                 Ribuan lowongan dari perusahaan terbaik Indonesia. Cari kerja, buat CV profesional, dan lamar dengan mudah.
@@ -80,7 +95,7 @@ const HomePage: React.FC = () => {
                 <Link
                   key={term}
                   to={`/lowongan?q=${encodeURIComponent(term)}`}
-                  className="text-sm text-background/80 hover:text-primary transition-colors"
+                  className="text-sm text-background/80 hover:text-blue-400 transition-colors"
                 >
                   {term}
                 </Link>
@@ -164,25 +179,28 @@ const HomePage: React.FC = () => {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {jobCategories.map((category, index) => (
-              <motion.div
-                key={category}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <Link
-                  to={`/lowongan?category=${encodeURIComponent(category)}`}
-                  className="block p-6 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-card transition-all duration-300 text-center group"
+            {jobCategories.map((category, index) => {
+              const IconComponent = categoryIcons[category] || Briefcase;
+              return (
+                <motion.div
+                  key={category}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
-                  <Briefcase className="w-8 h-8 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform" />
-                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                    {category}
-                  </h3>
-                </Link>
-              </motion.div>
-            ))}
+                  <Link
+                    to={`/lowongan?category=${encodeURIComponent(category)}`}
+                    className="block p-6 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-card transition-all duration-300 text-center group"
+                  >
+                    <IconComponent className="w-8 h-8 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform" />
+                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                      {category}
+                    </h3>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -225,25 +243,49 @@ const HomePage: React.FC = () => {
               viewport={{ once: true }}
               className="flex-1 w-full max-w-md"
             >
-              <div className="bg-background rounded-2xl p-6 shadow-2xl">
+              <div className="bg-white rounded-2xl p-6 shadow-2xl border border-border">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground">CV Builder</h3>
-                    <p className="text-sm text-muted-foreground">Gratis & Mudah</p>
+                    <h3 className="font-bold text-gray-900">CV Builder</h3>
+                    <p className="text-sm text-gray-600">Gratis & Mudah</p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div className="h-3 bg-muted rounded-full w-full" />
-                  <div className="h-3 bg-muted rounded-full w-3/4" />
-                  <div className="h-3 bg-muted rounded-full w-5/6" />
-                  <div className="h-3 bg-muted rounded-full w-2/3" />
+                
+                {/* CV Preview Content */}
+                <div className="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                  {/* Name Section */}
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-base">Nama Lengkap</h4>
+                    <p className="text-sm text-gray-600">Developer Profesional</p>
+                  </div>
+                  
+                  {/* Section Title */}
+                  <div className="pt-3 border-t border-gray-200">
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wide">PENGALAMAN</p>
+                    <p className="text-sm text-gray-700 font-medium mt-2">Senior Developer</p>
+                    <p className="text-xs text-gray-500">Tech Company • 2020 - Sekarang</p>
+                  </div>
+                  
+                  {/* Skills */}
+                  <div className="pt-2 flex flex-wrap gap-2">
+                    <span className="inline-block px-2.5 py-1 bg-blue-100 text-blue-700 text-xs rounded font-medium">React</span>
+                    <span className="inline-block px-2.5 py-1 bg-blue-100 text-blue-700 text-xs rounded font-medium">TypeScript</span>
+                    <span className="inline-block px-2.5 py-1 bg-blue-100 text-blue-700 text-xs rounded font-medium">Node.js</span>
+                  </div>
                 </div>
-                <div className="mt-6 flex gap-3">
-                  <div className="h-10 flex-1 bg-primary/10 rounded-lg" />
-                  <div className="h-10 flex-1 bg-primary rounded-lg" />
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button className="flex-1 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors text-sm">
+                    Edit CV
+                  </button>
+                  <button className="flex-1 h-10 bg-primary hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2">
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
                 </div>
               </div>
             </motion.div>

@@ -20,13 +20,13 @@ Font.register({
   ],
 });
 
-// PDF Styles
+// PDF Styles - Flat Design Color Palette
 const pdfStyles = StyleSheet.create({
   page: {
     padding: 40,
     fontFamily: 'Roboto',
     fontSize: 10,
-    color: '#1a1a1a',
+    color: '#111827', // Primary text
   },
   header: {
     marginBottom: 20,
@@ -36,7 +36,7 @@ const pdfStyles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 700,
     marginBottom: 8,
-    color: '#0d9488',
+    color: '#2563EB', // Primary blue
   },
   contactRow: {
     flexDirection: 'row',
@@ -47,11 +47,11 @@ const pdfStyles = StyleSheet.create({
   },
   contactItem: {
     fontSize: 9,
-    color: '#666',
+    color: '#6B7280', // Secondary text
   },
   summary: {
     fontSize: 10,
-    color: '#444',
+    color: '#374151', // Darker secondary
     marginTop: 12,
     lineHeight: 1.5,
     textAlign: 'center',
@@ -62,9 +62,9 @@ const pdfStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: 700,
-    color: '#0d9488',
+    color: '#2563EB', // Primary blue
     borderBottomWidth: 1,
-    borderBottomColor: '#0d9488',
+    borderBottomColor: '#10B981', // Accent green
     paddingBottom: 4,
     marginBottom: 10,
   },
@@ -82,15 +82,15 @@ const pdfStyles = StyleSheet.create({
   },
   itemSubtitle: {
     fontSize: 10,
-    color: '#666',
+    color: '#6B7280', // Secondary text
   },
   itemDate: {
     fontSize: 9,
-    color: '#888',
+    color: '#9CA3AF', // Muted text
   },
   itemDescription: {
     fontSize: 9,
-    color: '#444',
+    color: '#374151', // Darker secondary
     lineHeight: 1.4,
     marginTop: 4,
   },
@@ -100,12 +100,12 @@ const pdfStyles = StyleSheet.create({
     gap: 6,
   },
   skill: {
-    backgroundColor: '#f0fdfa',
+    backgroundColor: '#DBEAFE', // Light blue background
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
     fontSize: 9,
-    color: '#0d9488',
+    color: '#1D4ED8', // Dark blue
   },
 });
 

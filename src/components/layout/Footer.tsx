@@ -93,15 +93,15 @@ const Footer: React.FC = () => {
             <h3 className="font-semibold text-lg mb-4">Hubungi Kami</h3>
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-background/70 text-sm">
-                <MapPin className="w-4 h-4 text-primary" />
+                <MapPin className="w-4 h-4 text-white" />
                 Jakarta, Indonesia
               </li>
               <li className="flex items-center gap-3 text-background/70 text-sm">
-                <Mail className="w-4 h-4 text-primary" />
+                <Mail className="w-4 h-4 text-white" />
                 halo@kerjakita.id
               </li>
               <li className="flex items-center gap-3 text-background/70 text-sm">
-                <Phone className="w-4 h-4 text-primary" />
+                <Phone className="w-4 h-4 text-white" />
                 +62 21 1234 5678
               </li>
             </ul>

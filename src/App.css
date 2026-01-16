@@ -1,42 +1,150 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 0;
+  text-align: left;
+  background: #F9FAFB;
+  min-height: 100vh;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Flat Design - Color Consistent Styles */
+
+/* Text colors following the flat palette */
+.text-primary {
+  color: #111827;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.text-secondary {
+  color: #6B7280;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.text-muted {
+  color: #9CA3AF;
 }
 
+/* Background colors */
+.bg-primary {
+  background-color: #2563EB;
+}
+
+.bg-primary:hover {
+  background-color: #1D4ED8;
+}
+
+.bg-accent {
+  background-color: #10B981;
+}
+
+.bg-accent:hover {
+  background-color: #059669;
+}
+
+.bg-surface {
+  background-color: #FFFFFF;
+}
+
+.bg-soft {
+  background-color: #F9FAFB;
+}
+
+/* Border colors */
+.border-primary {
+  border-color: #E5E7EB;
+}
+
+/* Button styles - flat design */
+.button {
+  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+  font-weight: 500;
+}
+
+.button-primary {
+  background-color: #2563EB;
+  color: #FFFFFF;
+  border: none;
+  padding: 0.625rem 1rem;
+}
+
+.button-primary:hover {
+  background-color: #1D4ED8;
+}
+
+.button-secondary {
+  background-color: #10B981;
+  color: #FFFFFF;
+  border: none;
+  padding: 0.625rem 1rem;
+}
+
+.button-secondary:hover {
+  background-color: #059669;
+}
+
+.button-outline {
+  background-color: transparent;
+  color: #2563EB;
+  border: 1px solid #E5E7EB;
+  padding: 0.625rem 1rem;
+}
+
+.button-outline:hover {
+  background-color: #F9FAFB;
+  border-color: #2563EB;
+}
+
+/* Card styles - flat design with soft shadows */
 .card {
-  padding: 2em;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(17, 24, 39, 0.06);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.read-the-docs {
-  color: #888;
+.card:hover {
+  box-shadow: 0 4px 12px -2px rgba(17, 24, 39, 0.1);
+  transform: translateY(-2px);
 }
+
+/* Input styles */
+input,
+textarea,
+select {
+  border: 1px solid #E5E7EB;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background-color: #FFFFFF;
+  color: #111827;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+input::placeholder {
+  color: #9CA3AF;
+}
+
+/* Smooth transitions for all interactive elements */
+a,
+button {
+  transition: all 0.2s ease;
+}
+
+/* No heavy shadows - keeping it minimal */
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(17, 24, 39, 0.04);
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(17, 24, 39, 0.07), 0 2px 4px -2px rgba(17, 24, 39, 0.05);
+}
+
