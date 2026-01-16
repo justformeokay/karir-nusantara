@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   User,
   GraduationCap,
@@ -13,6 +14,7 @@ import {
   Plus,
   Trash2,
   Check,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +22,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCV, Education, WorkExperience, Certification, CVData } from '@/contexts/CVContext';
 import CVPreview from '@/components/cv/CVPreview';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 
 type Step = 'personal' | 'education' | 'experience' | 'skills' | 'certifications';
@@ -220,6 +229,12 @@ const CVBuilderPage: React.FC = () => {
                 <Eye className="w-5 h-5 mr-2" />
                 Lihat Pratinjau
               </Button>
+              <Link to="/check-cv" className="block">
+                <Button variant="outline" className="w-full gap-2">
+                  <Zap className="w-5 h-5" />
+                  Check CV Quality
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -407,12 +422,24 @@ const EducationForm: React.FC<{
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Gelar *</label>
-            <Input
-              placeholder="S1"
-              value={newEducation.degree}
-              onChange={e => setNewEducation({ ...newEducation, degree: e.target.value })}
-            />
+            <label className="text-sm font-medium text-foreground">Pendidikan Terakhir *</label>
+            <Select value={newEducation.degree} onValueChange={value => setNewEducation({ ...newEducation, degree: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih tingkat pendidikan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SMP">SMP</SelectItem>
+                <SelectItem value="SMA">SMA</SelectItem>
+                <SelectItem value="SMK">SMK</SelectItem>
+                <SelectItem value="D1">Diploma 1 (D1)</SelectItem>
+                <SelectItem value="D2">Diploma 2 (D2)</SelectItem>
+                <SelectItem value="D3">Diploma 3 (D3)</SelectItem>
+                <SelectItem value="S1">Sarjana (S1)</SelectItem>
+                <SelectItem value="S2">Magister (S2)</SelectItem>
+                <SelectItem value="S3">Doktor (S3)</SelectItem>
+                <SelectItem value="Profesi">Program Profesi</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Bidang Studi</label>
