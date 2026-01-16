@@ -1,0 +1,281 @@
+import React, { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  MapPin,
+  Briefcase,
+  Clock,
+  Wifi,
+  Zap,
+  Building2,
+  CheckCircle,
+  Share2,
+  Heart,
+  Send,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { mockJobs, formatSalaryRange, getTimeAgo } from '@/data/jobs';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthModal from '@/components/auth/AuthModal';
+import { toast } from 'sonner';
+
+const JobDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  const job = mockJobs.find(j => j.id === id);
+
+  if (!job) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Lowongan tidak ditemukan</h2>
+          <Link to="/lowongan">
+            <Button>Kembali ke Lowongan</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const handleApply = () => {
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    toast.success('Lamaran berhasil dikirim!');
+  };
+
+  const handleSave = () => {
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    setIsSaved(!isSaved);
+    toast.success(isSaved ? 'Lowongan dihapus dari simpanan' : 'Lowongan disimpan!');
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      await navigator.share({
+        title: job.title,
+        text: `Lowongan ${job.title} di ${job.company}`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success('Link berhasil disalin!');
+    }
+  };
+
+  return (
+    <>
+      <div className="min-h-screen pt-20 pb-16 bg-muted">
+        <div className="container mx-auto px-4">
+          {/* Back Button */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-6"
+          >
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Kembali
+            </button>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="lg:col-span-2 space-y-6"
+            >
+              {/* Header Card */}
+              <div className="bg-card border border-border rounded-xl p-6 md:p-8">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <img
+                    src={job.companyLogo}
+                    alt={job.company}
+                    className="w-20 h-20 rounded-xl object-cover bg-muted"
+                  />
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                      <div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                          {job.title}
+                        </h1>
+                        <p className="text-lg text-muted-foreground">{job.company}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {job.isUrgent && (
+                          <Badge variant="destructive" className="gap-1">
+                            <Zap className="w-3 h-3" />
+                            Urgent
+                          </Badge>
+                        )}
+                        {job.isRemote && (
+                          <Badge variant="secondary" className="gap-1">
+                            <Wifi className="w-3 h-3" />
+                            Remote
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-muted-foreground">
+                      <span className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-primary" />
+                        {job.location}, {job.province}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Briefcase className="w-5 h-5 text-primary" />
+                        {job.type}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-primary" />
+                        {getTimeAgo(job.postedDate)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-border">
+                  <p className="text-2xl font-bold text-primary">
+                    {formatSalaryRange(job.salaryMin, job.salaryMax)}
+                    <span className="text-sm font-normal text-muted-foreground ml-2">per bulan</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="bg-card border border-border rounded-xl p-6 md:p-8">
+                <h2 className="text-xl font-bold text-foreground mb-4">Deskripsi Pekerjaan</h2>
+                <p className="text-muted-foreground leading-relaxed">{job.description}</p>
+              </div>
+
+              {/* Requirements */}
+              <div className="bg-card border border-border rounded-xl p-6 md:p-8">
+                <h2 className="text-xl font-bold text-foreground mb-4">Persyaratan</h2>
+                <ul className="space-y-3">
+                  {job.requirements.map((req, index) => (
+                    <li key={index} className="flex items-start gap-3 text-muted-foreground">
+                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                      {req}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Responsibilities */}
+              <div className="bg-card border border-border rounded-xl p-6 md:p-8">
+                <h2 className="text-xl font-bold text-foreground mb-4">Tanggung Jawab</h2>
+                <ul className="space-y-3">
+                  {job.responsibilities.map((resp, index) => (
+                    <li key={index} className="flex items-start gap-3 text-muted-foreground">
+                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                      {resp}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Benefits */}
+              <div className="bg-card border border-border rounded-xl p-6 md:p-8">
+                <h2 className="text-xl font-bold text-foreground mb-4">Benefit</h2>
+                <div className="flex flex-wrap gap-2">
+                  {job.benefits.map((benefit, index) => (
+                    <Badge key={index} variant="secondary" className="text-sm py-2 px-4">
+                      {benefit}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Sidebar */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="space-y-6"
+            >
+              {/* Apply Card - Sticky */}
+              <div className="sticky top-24 space-y-6">
+                <div className="bg-card border border-border rounded-xl p-6">
+                  <Button onClick={handleApply} className="w-full mb-4" size="lg">
+                    <Send className="w-5 h-5 mr-2" />
+                    Lamar Pekerjaan
+                  </Button>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={handleSave}
+                      className={`flex-1 ${isSaved ? 'text-destructive border-destructive' : ''}`}
+                    >
+                      <Heart className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                      Simpan
+                    </Button>
+                    <Button variant="outline" onClick={handleShare} className="flex-1">
+                      <Share2 className="w-5 h-5 mr-2" />
+                      Bagikan
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Company Card */}
+                <div className="bg-card border border-border rounded-xl p-6">
+                  <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-primary" />
+                    Tentang Perusahaan
+                  </h3>
+                  <div className="flex items-center gap-4 mb-4">
+                    <img
+                      src={job.companyLogo}
+                      alt={job.company}
+                      className="w-14 h-14 rounded-xl object-cover bg-muted"
+                    />
+                    <div>
+                      <p className="font-semibold text-foreground">{job.company}</p>
+                      <p className="text-sm text-muted-foreground">{job.category}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {job.province}, Indonesia
+                  </p>
+                </div>
+
+                {/* CTA CV */}
+                <div className="bg-primary/10 border border-primary/20 rounded-xl p-6">
+                  <h3 className="font-semibold text-foreground mb-2">
+                    Belum punya CV?
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Buat CV profesional gratis dengan CV Builder kami
+                  </p>
+                  <Link to="/buat-cv">
+                    <Button variant="default" className="w-full">
+                      Buat CV Sekarang
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+    </>
+  );
+};
+
+export default JobDetailPage;
