@@ -54,7 +54,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0 }) => {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Briefcase className="w-4 h-4 text-primary" />
-                  {job.type}
+                  {job.jobType}
                 </span>
                 {job.isRemote && (
                   <span className="flex items-center gap-1.5 text-success">

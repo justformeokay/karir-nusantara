@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useCV, Education, WorkExperience, Certification, CVData } from '@/contexts/CVContext';
+import { useCV, type Education, type WorkExperience, type Certification, type CVData } from '@/contexts/CVContext.new';
 import CVPreview from '@/components/cv/CVPreview';
 import CVMiniPreview from '@/components/cv/CVMiniPreview';
 import { Badge } from '@/components/ui/badge';

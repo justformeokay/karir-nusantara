@@ -1,11 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Briefcase, SearchX } from 'lucide-react';
+import { Briefcase, SearchX, Loader2 } from 'lucide-react';
 import SearchBar from '@/components/jobs/SearchBar';
 import JobFilters from '@/components/jobs/JobFilters';
 import JobCard from '@/components/jobs/JobCard';
-import { mockJobs, salaryRanges } from '@/data/jobs';
+import { mockJobs, salaryRanges, type Job as MockJob } from '@/data/jobs';
+import { useJobs } from '@/hooks/useJobs';
+import { type Job as ApiJob, getJobTypeLabel } from '@/api/jobs';
 
 const JobsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13,12 +15,59 @@ const JobsPage: React.FC = () => {
   const initialCategory = searchParams.get('category') || '';
   
   const [keyword, setKeyword] = useState(initialKeyword);
+  const [debouncedKeyword, setDebouncedKeyword] = useState(initialKeyword);
   const [filters, setFilters] = useState({
     province: 'all',
     category: initialCategory || 'all',
     type: 'all',
     salaryRange: '0',
   });
+
+  // Debounce keyword for API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(keyword);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [keyword]);
+
+  // Fetch jobs from API with proper params
+  const { data: apiResponse, isLoading, isError } = useJobs({
+    search: debouncedKeyword || undefined,
+    province: filters.province !== 'all' ? filters.province : undefined,
+    job_type: filters.type !== 'all' ? filters.type : undefined,
+    per_page: 50,
+  });
+
+  // Transform API jobs to frontend format or use mock data as fallback
+  const jobs = useMemo(() => {
+    if (apiResponse?.jobs && apiResponse.jobs.length > 0) {
+      // Transform API format to frontend format (JobCard expects MockJob format)
+      return apiResponse.jobs.map((apiJob: ApiJob): MockJob => ({
+        id: String(apiJob.id),
+        title: apiJob.title,
+        company: apiJob.company?.name || 'Unknown Company',
+        companyLogo: apiJob.company?.logo_url || '',
+        location: apiJob.location || `${apiJob.city}, ${apiJob.province}`,
+        province: apiJob.province || '',
+        type: getJobTypeLabel(apiJob.jobType) as MockJob['type'],
+        category: 'Teknologi', // Default category
+        salaryMin: apiJob.salaryMin,
+        salaryMax: apiJob.salaryMax,
+        salaryCurrency: apiJob.salaryCurrency || 'IDR',
+        description: apiJob.description || '',
+        requirements: apiJob.requirements?.split('\n').filter(Boolean) || [],
+        benefits: apiJob.benefits?.split('\n').filter(Boolean) || [],
+        postedAt: apiJob.createdAt || new Date().toISOString(),
+        deadline: undefined,
+        isRemote: apiJob.isRemote || false,
+        experienceLevel: apiJob.experienceLevel as MockJob['experienceLevel'] || 'entry',
+        tags: apiJob.skills || [],
+      }));
+    }
+    // Fallback to mock data if API returns empty or error
+    return mockJobs;
+  }, [apiResponse]);
 
   const handleSearch = (newKeyword: string) => {
     setKeyword(newKeyword);
@@ -46,30 +95,11 @@ const JobsPage: React.FC = () => {
     setSearchParams({});
   };
 
+  // Client-side filtering for additional filters not supported by API
   const filteredJobs = useMemo(() => {
-    return mockJobs.filter(job => {
-      // Keyword filter
-      if (keyword) {
-        const searchLower = keyword.toLowerCase();
-        const matchesKeyword =
-          job.title.toLowerCase().includes(searchLower) ||
-          job.company.toLowerCase().includes(searchLower) ||
-          job.description.toLowerCase().includes(searchLower);
-        if (!matchesKeyword) return false;
-      }
-
-      // Province filter
-      if (filters.province !== 'all' && job.province !== filters.province) {
-        return false;
-      }
-
-      // Category filter
+    return jobs.filter(job => {
+      // Category filter (client-side since API might not support it yet)
       if (filters.category !== 'all' && job.category !== filters.category) {
-        return false;
-      }
-
-      // Type filter
-      if (filters.type !== 'all' && job.type !== filters.type) {
         return false;
       }
 
@@ -85,7 +115,7 @@ const JobsPage: React.FC = () => {
 
       return true;
     });
-  }, [keyword, filters]);
+  }, [jobs, filters]);
 
   return (
     <div className="min-h-screen pt-24 pb-16 bg-muted">
@@ -133,7 +163,16 @@ const JobsPage: React.FC = () => {
         </motion.div>
 
         {/* Job List */}
-        {filteredJobs.length > 0 ? (
+        {isLoading ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-16"
+          >
+            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+            <p className="text-muted-foreground">Memuat lowongan...</p>
+          </motion.div>
+        ) : filteredJobs.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {filteredJobs.map((job, index) => (
               <JobCard key={job.id} job={job} index={index} />

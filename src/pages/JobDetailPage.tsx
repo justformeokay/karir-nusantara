@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -13,22 +13,77 @@ import {
   Share2,
   Heart,
   Send,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockJobs, formatSalaryRange, getTimeAgo } from '@/data/jobs';
-import { useAuth } from '@/contexts/AuthContext';
+import { mockJobs, formatSalaryRange, getTimeAgo, type Job } from '@/data/jobs';
+import { useAuth } from '@/contexts/AuthContext.new';
+import { useApplications } from '@/contexts/ApplicationContext.new';
 import AuthModal from '@/components/auth/AuthModal';
 import { toast } from 'sonner';
+import { useJob } from '@/hooks/useJobs';
+import { getJobTypeLabel } from '@/api/jobs';
 
 const JobDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { applyToJob, hasAppliedToJob } = useApplications();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
 
-  const job = mockJobs.find(j => j.id === id);
+  // Try to fetch from API first
+  const { data: apiJob, isLoading, isError } = useJob(id ? parseInt(id, 10) : undefined);
+
+  // Transform API job to frontend format or use mock data as fallback
+  const job: Job | undefined = useMemo(() => {
+    if (apiJob) {
+      return {
+        id: String(apiJob.id),
+        title: apiJob.title,
+        company: apiJob.company?.name || 'Unknown Company',
+        companyLogo: apiJob.company?.logo_url || '',
+        location: apiJob.location || `${apiJob.city}, ${apiJob.province}`,
+        province: apiJob.province || '',
+        type: getJobTypeLabel(apiJob.jobType) as Job['type'],
+        category: 'Teknologi',
+        salaryMin: apiJob.salaryMin,
+        salaryMax: apiJob.salaryMax,
+        salaryCurrency: apiJob.salaryCurrency || 'IDR',
+        description: apiJob.description || '',
+        requirements: apiJob.requirements?.split('\n').filter(Boolean) || [],
+        responsibilities: apiJob.responsibilities?.split('\n').filter(Boolean) || [],
+        benefits: apiJob.benefits?.split('\n').filter(Boolean) || [],
+        postedDate: apiJob.createdAt || new Date().toISOString(),
+        postedAt: apiJob.createdAt || new Date().toISOString(),
+        deadline: undefined,
+        isRemote: apiJob.isRemote || false,
+        experienceLevel: apiJob.experienceLevel as Job['experienceLevel'] || 'entry',
+        tags: apiJob.skills || [],
+      };
+    }
+    // Fallback to mock data
+    return mockJobs.find(j => j.id === id);
+  }, [apiJob, id]);
+
+  const hasAlreadyApplied = id ? hasAppliedToJob(id) : false;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center"
+        >
+          <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+          <p className="text-muted-foreground">Memuat detail lowongan...</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (!job) {
     return (
@@ -43,12 +98,36 @@ const JobDetailPage: React.FC = () => {
     );
   }
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!isAuthenticated) {
       setIsAuthModalOpen(true);
       return;
     }
-    toast.success('Lamaran berhasil dikirim!');
+
+    if (hasAlreadyApplied) {
+      toast.info('Anda sudah melamar untuk posisi ini');
+      return;
+    }
+
+    if (!job) return;
+
+    setIsApplying(true);
+    try {
+      await applyToJob(job.id, {
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        companyLogo: job.companyLogo,
+        location: job.location,
+        type: job.jobType,
+      });
+      toast.success('Lamaran berhasil dikirim!');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Gagal mengirim lamaran';
+      toast.error(message);
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   const handleSave = () => {

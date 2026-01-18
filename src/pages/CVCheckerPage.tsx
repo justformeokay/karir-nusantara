@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useCV } from '@/contexts/CVContext';
+import { useCV } from '@/contexts/CVContext.new';
 import { analyzeCVQuality, getScoreColor, getScoreLabel, CVFeedback } from '@/lib/cvChecker';
 import { toast } from 'sonner';
 

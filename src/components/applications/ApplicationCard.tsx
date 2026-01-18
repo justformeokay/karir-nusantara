@@ -184,7 +184,7 @@ export function ApplicationCard({
               </span>
               <span className="flex items-center gap-1">
                 <Briefcase className="w-3.5 h-3.5" />
-                {job.type}
+                {job.jobType}
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />

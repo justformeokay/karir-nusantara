@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Mail, Phone, MapPin, Linkedin, Globe, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CVData } from '@/contexts/CVContext';
+import { type CVData } from '@/contexts/CVContext.new';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font, Image } from '@react-pdf/renderer';
 
 interface CVPreviewProps {

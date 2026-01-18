@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Mail, Phone, MapPin, Linkedin, Globe, Upload, X } from 'lucide-react';
-import { CVData } from '@/contexts/CVContext';
+import { type CVData } from '@/contexts/CVContext.new';
 import { Button } from '@/components/ui/button';
 
 interface CVMiniPreviewProps {

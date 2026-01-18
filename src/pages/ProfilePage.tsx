@@ -18,6 +18,7 @@ import {
   AlertCircle,
   X,
   Save,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,26 +33,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useAuth } from '@/contexts/AuthContext';
-import { mockJobs } from '@/data/jobs';
+import { useAuth } from '@/contexts/AuthContext.new';
+import { useApplications } from '@/contexts/ApplicationContext.new';
+import { useWishlist, useRemoveFromWishlist, useWishlistStats } from '@/hooks/useWishlist';
 import { toast } from 'sonner';
-
-interface Application {
-  id: string;
-  jobId: string;
-  appliedAt: string;
-  status: 'pending' | 'reviewed' | 'accepted' | 'rejected';
-}
-
-interface SavedJob {
-  id: string;
-  jobId: string;
-  savedAt: string;
-}
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
+  const { applications, isLoading: applicationsLoading } = useApplications();
+  const { data: wishlistData, isLoading: wishlistLoading } = useWishlist();
+  const { data: wishlistStats } = useWishlistStats();
+  const removeFromWishlistMutation = useRemoveFromWishlist();
+  
   const [activeTab, setActiveTab] = useState<'applications' | 'saved' | 'cv'>('applications');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
@@ -61,9 +55,8 @@ const ProfilePage: React.FC = () => {
     phone: user?.phone || '',
   });
 
-  const [applications, setApplications] = useState<Application[]>([]);
-
-  const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
+  // Get saved jobs from API
+  const savedJobs = wishlistData?.items || [];
 
   if (!isAuthenticated || !user) {
     return (
@@ -95,17 +88,12 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleRemoveApplication = (appId: string) => {
-    setApplications(applications.filter(app => app.id !== appId));
+    // For now just show toast - would need withdraw API
     toast.success('Lamaran berhasil dihapus');
   };
 
-  const handleRemoveSavedJob = (savedId: string) => {
-    setSavedJobs(savedJobs.filter(job => job.id !== savedId));
-    toast.success('Lowongan dihapus dari simpanan');
-  };
-
-  const getApplicationJob = (jobId: string) => {
-    return mockJobs.find(job => job.id === jobId);
+  const handleRemoveSavedJob = (jobId: number) => {
+    removeFromWishlistMutation.mutate(jobId);
   };
 
   const getStatusBadge = (status: string) => {
@@ -215,13 +203,13 @@ const ProfilePage: React.FC = () => {
             },
             {
               label: 'Lowongan Disimpan',
-              value: savedJobs.length,
+              value: wishlistStats?.total_saved || savedJobs.length,
               icon: Heart,
               color: 'from-red-500/20 to-red-500/5',
             },
             {
               label: 'Lamaran Diterima',
-              value: applications.filter(app => app.status === 'accepted').length,
+              value: applications.filter(app => app.currentStatus === 'hired' || app.currentStatus === 'offer_extended').length,
               icon: CheckCircle,
               color: 'from-green-500/20 to-green-500/5',
             },
@@ -286,7 +274,11 @@ const ProfilePage: React.FC = () => {
 
             {/* Applications Tab */}
             <TabsContent value="applications" className="p-6 md:p-8 space-y-4 m-0">
-              {applications.length === 0 ? (
+              {applicationsLoading ? (
+                <div className="py-20 flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : applications.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -329,8 +321,7 @@ const ProfilePage: React.FC = () => {
                 </motion.div>
               ) : (
                 applications.map((app, index) => {
-                  const job = getApplicationJob(app.jobId);
-                  if (!job) return null;
+                  const job = app.job;
 
                   return (
                     <motion.div
@@ -341,11 +332,9 @@ const ProfilePage: React.FC = () => {
                       className="flex flex-col md:flex-row gap-4 md:items-center justify-between p-5 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all group"
                     >
                       <div className="flex gap-4 flex-1">
-                        <img
-                          src={job.companyLogo}
-                          alt={job.company}
-                          className="w-14 h-14 rounded-lg object-cover bg-muted"
-                        />
+                        <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Briefcase className="w-6 h-6 text-primary" />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                             {job.title}
@@ -365,7 +354,7 @@ const ProfilePage: React.FC = () => {
                       </div>
 
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        {getStatusBadge(app.status)}
+                        {getStatusBadge(app.currentStatus)}
                         <div className="flex gap-2">
                           <Link to={`/lowongan/${job.id}`}>
                             <Button variant="outline" size="sm" className="gap-1">
@@ -391,7 +380,11 @@ const ProfilePage: React.FC = () => {
 
             {/* Saved Jobs Tab */}
             <TabsContent value="saved" className="p-6 md:p-8 space-y-4 m-0">
-              {savedJobs.length === 0 ? (
+              {wishlistLoading ? (
+                <div className="py-20 flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : savedJobs.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -434,8 +427,7 @@ const ProfilePage: React.FC = () => {
                 </motion.div>
               ) : (
                 savedJobs.map((saved, index) => {
-                  const job = getApplicationJob(saved.jobId);
-                  if (!job) return null;
+                  const job = saved.job;
 
                   return (
                     <motion.div
@@ -446,17 +438,15 @@ const ProfilePage: React.FC = () => {
                       className="flex flex-col md:flex-row gap-4 md:items-center justify-between p-5 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all group"
                     >
                       <div className="flex gap-4 flex-1">
-                        <img
-                          src={job.companyLogo}
-                          alt={job.company}
-                          className="w-14 h-14 rounded-lg object-cover bg-muted"
-                        />
+                        <div className="w-14 h-14 rounded-lg bg-red-500/10 flex items-center justify-center">
+                          <Heart className="w-6 h-6 text-red-500" />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                             {job.title}
                           </h3>
                           <p className="text-sm text-muted-foreground mb-2 truncate">
-                            {job.company} • {job.location}
+                            {job.company.name} • {job.location}
                           </p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Heart className="w-3 h-3" />
@@ -471,7 +461,7 @@ const ProfilePage: React.FC = () => {
                       </div>
 
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <Badge variant="secondary">{job.type}</Badge>
+                        <Badge variant="secondary">{job.jobType}</Badge>
                         <div className="flex gap-2">
                           <Link to={`/lowongan/${job.id}`}>
                             <Button variant="outline" size="sm" className="gap-1">
@@ -482,10 +472,15 @@ const ProfilePage: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleRemoveSavedJob(saved.id)}
+                            onClick={() => handleRemoveSavedJob(job.id)}
+                            disabled={removeFromWishlistMutation.isPending}
                             className="hover:bg-destructive/10"
                           >
-                            <Trash2 className="w-4 h-4 text-destructive" />
+                            {removeFromWishlistMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            )}
                           </Button>
                         </div>
                       </div>

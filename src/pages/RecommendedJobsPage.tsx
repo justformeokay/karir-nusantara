@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext.new';
 import { mockJobs } from '@/data/jobs';
 import {
   getJobRecommendations,
@@ -209,7 +209,7 @@ const RecommendedJobsPage: React.FC = () => {
                               </Badge>
                               <Badge variant="outline" className="gap-1">
                                 <Briefcase className="w-3 h-3" />
-                                {rec.job.type}
+                                {rec.job.jobType}
                               </Badge>
                               {rec.job.salaryMin && (
                                 <Badge variant="outline" className="gap-1">

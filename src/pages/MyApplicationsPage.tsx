@@ -12,10 +12,11 @@ import {
   RefreshCw,
   ArrowUpDown,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { ApplicationCard } from '@/components/applications';
-import { useApplications } from '@/contexts/ApplicationContext';
-import { ApplicationStatus, APPLICATION_STATUS_CONFIG } from '@/data/applications';
+import { useApplications } from '@/contexts/ApplicationContext.new';
+import { APPLICATION_STATUS_CONFIG, type ApplicationStatus } from '@/data/applications';
 
 // ============================================
 // TYPES

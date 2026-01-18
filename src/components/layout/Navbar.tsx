@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext.new';
 import AuthModal from '@/components/auth/AuthModal';
 import logo from '@/assets/karir-nusantara.png';
 
