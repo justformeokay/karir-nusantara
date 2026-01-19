@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Briefcase, SearchX, Loader2 } from 'lucide-react';
+import { Briefcase, SearchX, Loader2, Plus } from 'lucide-react';
 import SearchBar from '@/components/jobs/SearchBar';
 import JobFilters from '@/components/jobs/JobFilters';
 import JobCard from '@/components/jobs/JobCard';
@@ -54,15 +54,12 @@ const JobsPage: React.FC = () => {
         category: 'Teknologi', // Default category
         salaryMin: apiJob.salaryMin,
         salaryMax: apiJob.salaryMax,
-        salaryCurrency: apiJob.salaryCurrency || 'IDR',
         description: apiJob.description || '',
         requirements: apiJob.requirements?.split('\n').filter(Boolean) || [],
         benefits: apiJob.benefits?.split('\n').filter(Boolean) || [],
-        postedAt: apiJob.createdAt || new Date().toISOString(),
-        deadline: undefined,
+        responsibilities: [], // Not available from API
+        postedDate: apiJob.createdAt || new Date().toISOString(),
         isRemote: apiJob.isRemote || false,
-        experienceLevel: apiJob.experienceLevel as MockJob['experienceLevel'] || 'entry',
-        tags: apiJob.skills || [],
       }));
     }
     // Fallback to mock data if API returns empty or error
@@ -124,14 +121,23 @@ const JobsPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex items-center justify-between"
         >
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Lowongan Kerja
-          </h1>
-          <p className="text-muted-foreground">
-            Temukan pekerjaan impian Anda dari ribuan lowongan terbaru
-          </p>
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Lowongan Kerja
+            </h1>
+            <p className="text-muted-foreground">
+              Temukan pekerjaan impian Anda dari ribuan lowongan terbaru
+            </p>
+          </div>
+          <Link
+            to="/dashboard/jobs/create"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Buat Loker</span>
+          </Link>
         </motion.div>
 
         {/* Search */}
