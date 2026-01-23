@@ -10,6 +10,7 @@ import Layout from "@/components/layout/Layout";
 import HomePage from "@/pages/HomePage";
 import JobsPage from "@/pages/JobsPage";
 import JobDetailPage from "@/pages/JobDetailPage";
+import CompanyDetailPage from "@/pages/CompanyDetailPage";
 import CVBuilderPage from "@/pages/CVBuilderPage";
 import CVCheckerPage from "@/pages/CVCheckerPage";
 import ProfilePage from "@/pages/ProfilePage";
@@ -54,7 +55,8 @@ const App = () => (
                 <Route element={<Layout />}>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/lowongan" element={<JobsPage />} />
-                  <Route path="/lowongan/:slug" element={<JobDetailPage />} />
+                  <Route path="/lowongan/:id" element={<JobDetailPage />} />
+                  <Route path="/perusahaan/:id" element={<CompanyDetailPage />} />
                   <Route path="/buat-cv" element={<CVBuilderPage />} />
                   <Route path="/check-cv" element={<CVCheckerPage />} />
                   <Route path="/profile" element={<ProfilePage />} />

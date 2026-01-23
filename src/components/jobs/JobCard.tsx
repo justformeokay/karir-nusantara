@@ -66,7 +66,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0 }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
     >
-      <Link to={`/lowongan/${job.slug}`}>
+      <Link to={`/lowongan/${job.hashId || job.id}`}>
         <div className="group bg-card border border-border rounded-xl p-5 hover:shadow-card-hover transition-all duration-300 hover:border-primary/30">
           <div className="flex gap-4">
             {/* Company Logo */}

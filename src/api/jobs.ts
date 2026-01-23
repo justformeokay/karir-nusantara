@@ -7,6 +7,7 @@ import { ENDPOINTS } from './config';
 
 export interface JobCompany {
   id: number;
+  hash_id?: string;
   name: string;
   logo_url?: string;
   website?: string;
@@ -27,6 +28,7 @@ export interface JobSalary {
 // API Response format from backend
 export interface JobApiResponse {
   id: number;
+  hash_id?: string;
   title: string;
   slug: string;
   description: string;
@@ -50,6 +52,7 @@ export interface JobApiResponse {
 // Frontend-friendly Job type (transformed from API)
 export interface Job {
   id: number;
+  hashId?: string;
   title: string;
   slug: string;
   description: string;
@@ -105,6 +108,7 @@ export interface JobListResponse {
 function transformJob(apiJob: JobApiResponse): Job {
   return {
     id: apiJob.id,
+    hashId: apiJob.hash_id,
     title: apiJob.title,
     slug: apiJob.slug,
     description: apiJob.description,

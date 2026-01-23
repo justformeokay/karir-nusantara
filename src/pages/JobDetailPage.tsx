@@ -17,16 +17,16 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockJobs, formatSalaryRange, getTimeAgo, type Job } from '@/data/jobs';
+import { formatSalaryRange, getTimeAgo } from '@/data/jobs';
 import { useAuth } from '@/contexts/AuthContext.new';
 import { useApplications } from '@/contexts/ApplicationContext.new';
 import AuthModal from '@/components/auth/AuthModal';
 import { toast } from 'sonner';
-import { useJob, useJobBySlug } from '@/hooks/useJobs';
-import { getJobTypeLabel } from '@/api/jobs';
+import { useJob } from '@/hooks/useJobs';
+import { getJobTypeLabel, type Job } from '@/api/jobs';
 
 const JobDetailPage: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { applyToJob, hasAppliedToJob } = useApplications();
@@ -34,44 +34,13 @@ const JobDetailPage: React.FC = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
 
-  // Fetch from API using slug
-  const { data: apiJob, isLoading, isError } = useJobBySlug(slug);
+  // Fetch from API using id (supports hash_id)
+  const { data: apiJob, isLoading, isError } = useJob(id);
 
-  // Transform API job to frontend format or use mock data as fallback
-  const job: Job | undefined = useMemo(() => {
-    if (apiJob) {
-      return {
-        id: String(apiJob.id),
-        title: apiJob.title,
-        company: apiJob.company?.name || 'Unknown Company',
-        companyLogo: apiJob.company?.logo_url ? `http://localhost:8081${apiJob.company.logo_url}` : '',
-        companyCity: apiJob.company?.city,
-        companyProvince: apiJob.company?.province,
-        location: apiJob.location || `${apiJob.city}, ${apiJob.province}`,
-        province: apiJob.province || '',
-        city: apiJob.city || '',
-        type: getJobTypeLabel(apiJob.jobType) as Job['type'],
-        category: 'Teknologi',
-        salaryMin: apiJob.salaryMin,
-        salaryMax: apiJob.salaryMax,
-        salaryCurrency: apiJob.salaryCurrency || 'IDR',
-        description: apiJob.description || '',
-        requirements: apiJob.requirements?.split('\n').filter(Boolean) || [],
-        responsibilities: apiJob.responsibilities?.split('\n').filter(Boolean) || [],
-        benefits: apiJob.benefits?.split('\n').filter(Boolean) || [],
-        postedDate: apiJob.createdAt || new Date().toISOString(),
-        postedAt: apiJob.createdAt || new Date().toISOString(),
-        deadline: undefined,
-        isRemote: apiJob.isRemote || false,
-        experienceLevel: apiJob.experienceLevel as Job['experienceLevel'] || 'entry',
-        tags: apiJob.skills || [],
-      };
-    }
-    // Fallback to mock data
-    return mockJobs.find(j => j.slug === slug || j.id === slug);
-  }, [apiJob, slug]);
+  // Use API job directly
+  const job = apiJob;
 
-  const hasAlreadyApplied = slug ? hasAppliedToJob(slug) : false;
+  const hasAlreadyApplied = id ? hasAppliedToJob(id) : false;
 
   if (isLoading) {
     return (
@@ -116,13 +85,13 @@ const JobDetailPage: React.FC = () => {
 
     setIsApplying(true);
     try {
-      await applyToJob(job.id, {
-        id: job.id,
+      await applyToJob(String(job.id), {
+        id: String(job.id),
         title: job.title,
-        company: job.company,
-        companyLogo: job.companyLogo,
+        company: job.company.name,
+        companyLogo: job.company.logo_url || '',
         location: job.location,
-        type: job.jobType,
+        type: getJobTypeLabel(job.jobType) as any,
       });
       toast.success('Lamaran berhasil dikirim!');
     } catch (error) {
@@ -192,11 +161,11 @@ const JobDetailPage: React.FC = () => {
               <div className="bg-card border border-border rounded-xl p-6 md:p-8">
                 <div className="flex flex-col md:flex-row gap-6">
                   <img
-                    src={job.companyLogo || `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&background=667eea&color=fff&size=128`}
-                    alt={job.company}
+                    src={job.company.logo_url ? `http://localhost:8081${job.company.logo_url}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company.name)}&background=667eea&color=fff&size=128`}
+                    alt={job.company.name}
                     className="w-20 h-20 rounded-xl object-cover bg-muted"
                     onError={(e) => {
-                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&background=667eea&color=fff&size=128`;
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company.name)}&background=667eea&color=fff&size=128`;
                     }}
                   />
                   <div className="flex-1">
@@ -205,10 +174,10 @@ const JobDetailPage: React.FC = () => {
                         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                           {job.title}
                         </h1>
-                        <p className="text-lg text-muted-foreground">{job.company}</p>
+                        <p className="text-lg text-muted-foreground">{job.company.name}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        {job.isUrgent && (
+                        {job.status === 'active' && job.applicationsCount === 0 && (
                           <Badge variant="destructive" className="gap-1">
                             <Zap className="w-3 h-3" />
                             Urgent
@@ -226,25 +195,29 @@ const JobDetailPage: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-muted-foreground">
                       <span className="flex items-center gap-2">
                         <MapPin className="w-5 h-5 text-primary" />
-                        {job.location}, {job.province}
+                        {job.location}
                       </span>
                       <span className="flex items-center gap-2">
                         <Briefcase className="w-5 h-5 text-primary" />
-                        {job.type}
+                        {getJobTypeLabel(job.jobType)}
                       </span>
                       <span className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-primary" />
-                        {getTimeAgo(job.postedDate)}
+                        {getTimeAgo(job.createdAt)}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-border">
-                  <p className="text-2xl font-bold text-primary">
-                    {formatSalaryRange(job.salaryMin, job.salaryMax)}
-                    <span className="text-sm font-normal text-muted-foreground ml-2">per bulan</span>
-                  </p>
+                  {job.isSalaryVisible ? (
+                    <p className="text-2xl font-bold text-primary">
+                      {formatSalaryRange(job.salaryMin, job.salaryMax)}
+                      <span className="text-sm font-normal text-muted-foreground ml-2">per bulan</span>
+                    </p>
+                  ) : (
+                    <p className="text-muted-foreground">Gaji tidak ditampilkan oleh perusahaan</p>
+                  )}
                 </div>
               </div>
 
@@ -255,42 +228,48 @@ const JobDetailPage: React.FC = () => {
               </div>
 
               {/* Requirements */}
-              <div className="bg-card border border-border rounded-xl p-6 md:p-8">
-                <h2 className="text-xl font-bold text-foreground mb-4">Persyaratan</h2>
-                <ul className="space-y-3">
-                  {job.requirements.map((req, index) => (
-                    <li key={index} className="flex items-start gap-3 text-muted-foreground">
-                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                      {req}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {job.requirements && (
+                <div className="bg-card border border-border rounded-xl p-6 md:p-8">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Persyaratan</h2>
+                  <ul className="space-y-3">
+                    {job.requirements.split('\n').filter(Boolean).map((req, index) => (
+                      <li key={index} className="flex items-start gap-3 text-muted-foreground">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        {req}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Responsibilities */}
-              <div className="bg-card border border-border rounded-xl p-6 md:p-8">
-                <h2 className="text-xl font-bold text-foreground mb-4">Tanggung Jawab</h2>
-                <ul className="space-y-3">
-                  {job.responsibilities.map((resp, index) => (
-                    <li key={index} className="flex items-start gap-3 text-muted-foreground">
-                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                      {resp}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {job.responsibilities && (
+                <div className="bg-card border border-border rounded-xl p-6 md:p-8">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Tanggung Jawab</h2>
+                  <ul className="space-y-3">
+                    {job.responsibilities.split('\n').filter(Boolean).map((resp, index) => (
+                      <li key={index} className="flex items-start gap-3 text-muted-foreground">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        {resp}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Benefits */}
-              <div className="bg-card border border-border rounded-xl p-6 md:p-8">
-                <h2 className="text-xl font-bold text-foreground mb-4">Benefit</h2>
-                <div className="flex flex-wrap gap-2">
-                  {job.benefits.map((benefit, index) => (
-                    <Badge key={index} variant="secondary" className="text-sm py-2 px-4">
-                      {benefit}
-                    </Badge>
-                  ))}
+              {job.benefits && (
+                <div className="bg-card border border-border rounded-xl p-6 md:p-8">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Benefit</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {job.benefits.split('\n').filter(Boolean).map((benefit, index) => (
+                      <Badge key={index} variant="secondary" className="text-sm py-2 px-4">
+                        {benefit}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </motion.div>
 
             {/* Sidebar */}
@@ -329,23 +308,22 @@ const JobDetailPage: React.FC = () => {
                     <Building2 className="w-5 h-5 text-primary" />
                     Tentang Perusahaan
                   </h3>
-                  <div className="flex items-center gap-4 mb-4">
-                    <img
-                      src={job.companyLogo || `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&background=667eea&color=fff&size=128`}
-                      alt={job.company}
-                      className="w-14 h-14 rounded-xl object-cover bg-muted"
-                      onError={(e) => {
-                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&background=667eea&color=fff&size=128`;
-                      }}
-                    />
-                    <div>
-                      <p className="font-semibold text-foreground">{job.company}</p>
-                      <p className="text-sm text-muted-foreground">{job.category}</p>
+                  <Link to={`/perusahaan/${job.company.hash_id}`} className="block">
+                    <div className="flex items-center gap-4 mb-4 cursor-pointer group">
+                      <img
+                        src={job.company.logo_url ? `http://localhost:8081${job.company.logo_url}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company.name)}&background=667eea&color=fff&size=128`}
+                        alt={job.company.name}
+                        className="w-14 h-14 rounded-xl object-cover bg-muted"
+                        onError={(e) => {
+                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company.name)}&background=667eea&color=fff&size=128`;
+                        }}
+                      />
+                      <div>
+                        <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{job.company.name}</p>
+                        <p className="text-sm text-muted-foreground">Klik untuk lihat detail</p>
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {job.companyCity && `${job.companyCity}`}{job.companyCity && job.companyProvince && ', '}{job.companyProvince && `${job.companyProvince}`}{(job.companyCity || job.companyProvince) && ', Indonesia'}
-                  </p>
+                  </Link>
                 </div>
 
                 {/* CTA CV */}

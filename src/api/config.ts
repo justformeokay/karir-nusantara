@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api/v1';
 
 // Token storage keys
 export const ACCESS_TOKEN_KEY = 'karir_access_token';
@@ -49,5 +49,10 @@ export const ENDPOINTS = {
     STATS: '/wishlist/stats',
     CHECK: (jobId: number | string) => `/wishlist/check/${jobId}`,
     REMOVE: (jobId: number | string) => `/wishlist/${jobId}`,
+  },
+  
+  // Companies (Public)
+  COMPANIES: {
+    BY_HASH_ID: (hashId: string) => `/companies/${hashId}`,
   },
 } as const;

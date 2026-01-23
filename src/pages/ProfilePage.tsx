@@ -356,7 +356,7 @@ const ProfilePage: React.FC = () => {
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         {getStatusBadge(app.currentStatus)}
                         <div className="flex gap-2">
-                          <Link to={`/lowongan/${job.id}`}>
+                          <Link to={`/lowongan/${job.hashId || job.id}`}>
                             <Button variant="outline" size="sm" className="gap-1">
                               <ArrowRight className="w-3 h-3" />
                               <span className="hidden sm:inline">Detail</span>
@@ -463,7 +463,7 @@ const ProfilePage: React.FC = () => {
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <Badge variant="secondary">{job.jobType}</Badge>
                         <div className="flex gap-2">
-                          <Link to={`/lowongan/${job.id}`}>
+                          <Link to={`/lowongan/${job.hashId || job.id}`}>
                             <Button variant="outline" size="sm" className="gap-1">
                               <ArrowRight className="w-3 h-3" />
                               <span className="hidden sm:inline">Detail</span>

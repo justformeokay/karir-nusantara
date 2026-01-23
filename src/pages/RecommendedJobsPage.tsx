@@ -263,7 +263,7 @@ const RecommendedJobsPage: React.FC = () => {
 
                           {/* CTA Buttons */}
                           <div className="space-y-2">
-                            <Link to={`/lowongan/${rec.job.id}`}>
+                            <Link to={`/lowongan/${rec.job.hashId || rec.job.id}`}>
                               <Button size="sm" className="w-full gap-2">
                                 Lihat Detail
                                 <ArrowRight className="w-4 h-4" />

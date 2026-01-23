@@ -166,7 +166,7 @@ export function ApplicationCard({
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <Link
-                  to={`/lowongan/${job.id}`}
+                  to={`/lowongan/${job.hashId || job.id}`}
                   className="text-base font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-1"
                 >
                   {job.title}
@@ -247,7 +247,7 @@ export function ApplicationCard({
               {/* Actions */}
               <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
                 <Link
-                  to={`/lowongan/${job.id}`}
+                  to={`/lowongan/${job.hashId || job.id}`}
                   className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium"
                 >
                   <ExternalLink className="w-4 h-4" />

@@ -17,7 +17,7 @@ export const jobKeys = {
   lists: () => [...jobKeys.all, 'list'] as const,
   list: (params: JobListParams) => [...jobKeys.lists(), params] as const,
   details: () => [...jobKeys.all, 'detail'] as const,
-  detail: (id: number) => [...jobKeys.details(), id] as const,
+  detail: (id: string | number) => [...jobKeys.details(), id] as const,
   slug: (slug: string) => [...jobKeys.details(), 'slug', slug] as const,
 };
 
@@ -38,9 +38,9 @@ export function useJobs(params: JobListParams = {}) {
 }
 
 /**
- * Hook to fetch a single job by ID
+ * Hook to fetch a single job by ID (supports hash_id)
  */
-export function useJob(id: number | undefined) {
+export function useJob(id: string | number | undefined) {
   return useQuery<Job | null>({
     queryKey: jobKeys.detail(id!),
     queryFn: () => getJobById(id!),
