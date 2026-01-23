@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User as UserIcon,
+  UserRoundCog,
   Mail,
   Phone,
   Briefcase,
@@ -37,6 +38,7 @@ import { useAuth } from '@/contexts/AuthContext.new';
 import { useApplications } from '@/contexts/ApplicationContext.new';
 import { useWishlist, useRemoveFromWishlist, useWishlistStats } from '@/hooks/useWishlist';
 import { toast } from 'sonner';
+import ExtendedProfileForm from '@/components/profile/ExtendedProfileForm';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,7 +48,7 @@ const ProfilePage: React.FC = () => {
   const { data: wishlistStats } = useWishlistStats();
   const removeFromWishlistMutation = useRemoveFromWishlist();
   
-  const [activeTab, setActiveTab] = useState<'applications' | 'saved' | 'cv'>('applications');
+  const [activeTab, setActiveTab] = useState<'applications' | 'saved' | 'cv' | 'profile'>('applications');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
@@ -242,12 +244,12 @@ const ProfilePage: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="bg-card border border-border rounded-xl shadow-sm overflow-hidden"
         >
-          <Tabs defaultValue="applications" className="w-full" onValueChange={(value) => setActiveTab(value as 'applications' | 'saved' | 'cv')}>
+          <Tabs defaultValue="applications" className="w-full" onValueChange={(value) => setActiveTab(value as 'applications' | 'saved' | 'cv' | 'profile')}>
             <div className="border-b border-border bg-muted/30">
-              <TabsList className="grid w-full grid-cols-3 gap-0 rounded-none bg-transparent p-0">
+              <TabsList className="grid w-full grid-cols-4 gap-0 rounded-none bg-transparent p-0">
                 <TabsTrigger
                   value="applications"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-2 px-6 py-4"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-2 px-4 py-4"
                 >
                   <Briefcase className={`w-4 h-4 ${activeTab === 'applications' ? 'fill-current' : ''}`} />
                   <span className="hidden sm:inline">Lamaran Saya</span>
@@ -255,7 +257,7 @@ const ProfilePage: React.FC = () => {
                 </TabsTrigger>
                 <TabsTrigger
                   value="saved"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-2 px-6 py-4"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-2 px-4 py-4"
                 >
                   <Heart className={`w-4 h-4 ${activeTab === 'saved' ? 'fill-current' : ''}`} />
                   <span className="hidden sm:inline">Wishlist</span>
@@ -263,11 +265,19 @@ const ProfilePage: React.FC = () => {
                 </TabsTrigger>
                 <TabsTrigger
                   value="cv"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-2 px-6 py-4"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-2 px-4 py-4"
                 >
                   <FileText className={`w-4 h-4 ${activeTab === 'cv' ? 'fill-current' : ''}`} />
                   <span className="hidden sm:inline">CV Saya</span>
                   <span className="sm:hidden">CV</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="profile"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-2 px-4 py-4"
+                >
+                  <UserRoundCog className={`w-4 h-4 ${activeTab === 'profile' ? 'fill-current' : ''}`} />
+                  <span className="hidden sm:inline">Profil Lengkap</span>
+                  <span className="sm:hidden">Profil</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -523,6 +533,11 @@ const ProfilePage: React.FC = () => {
                   </Button>
                 </div>
               </div>
+            </TabsContent>
+
+            {/* Extended Profile Tab */}
+            <TabsContent value="profile" className="p-6 md:p-8 m-0">
+              <ExtendedProfileForm />
             </TabsContent>
           </Tabs>
         </motion.div>

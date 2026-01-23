@@ -79,3 +79,23 @@ export {
   type ApplicationListResponse,
   type ApplyRequest,
 } from './applications';
+
+// Profile API
+export {
+  getProfile,
+  updateProfile,
+  deleteProfile,
+  getDocuments,
+  getDocument,
+  uploadDocument,
+  updateDocument,
+  deleteDocument,
+  setPrimaryDocument,
+  getDocumentTypeLabel,
+  getGenderLabel,
+  getMaritalStatusLabel,
+  formatFileSize,
+  type ApplicantProfile,
+  type ApplicantDocument,
+  type UpdateProfileRequest,
+} from './profile';
