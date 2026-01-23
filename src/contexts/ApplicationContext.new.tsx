@@ -223,7 +223,8 @@ export function ApplicationProvider({ children }: ApplicationProviderProps) {
     
     try {
       const response = await getMyApplications({ limit: 100 });
-      const transformed = response.data.map(transformApiApplication);
+      const applications = response?.data || [];
+      const transformed = applications.map(transformApiApplication);
       setApplications(transformed);
       
       // Also save to localStorage as cache

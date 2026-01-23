@@ -100,6 +100,10 @@ export interface UpdateProfileRequest {
   willing_to_relocate?: boolean;
 }
 
+export interface AvatarUploadResponse {
+  avatar_url: string;
+}
+
 // ============================================
 // API FUNCTIONS - PROFILE
 // ============================================
@@ -108,9 +112,30 @@ export interface UpdateProfileRequest {
  * Get current user's applicant profile
  */
 export async function getProfile(): Promise<ApplicantProfile> {
-  const response = await apiRequest<ApplicantProfile>('/api/v1/profile');
+  const response = await apiRequest<ApplicantProfile>('/profile');
   if (!response.data) {
     throw new Error('Failed to get profile');
+  }
+  return response.data;
+}
+
+/**
+ * Upload profile avatar
+ */
+export async function uploadAvatar(file: File): Promise<AvatarUploadResponse> {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const response = await apiRequest<AvatarUploadResponse>('/profile/avatar', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      // Don't set Content-Type for FormData - browser will set it with boundary
+    },
+  });
+  
+  if (!response.data) {
+    throw new Error('Failed to upload avatar');
   }
   return response.data;
 }
@@ -119,7 +144,7 @@ export async function getProfile(): Promise<ApplicantProfile> {
  * Update current user's profile
  */
 export async function updateProfile(data: UpdateProfileRequest): Promise<ApplicantProfile> {
-  const response = await apiRequest<ApplicantProfile>('/api/v1/profile', {
+  const response = await apiRequest<ApplicantProfile>('/profile', {
     method: 'PUT',
     body: JSON.stringify(data),
   });
@@ -133,7 +158,7 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<Applica
  * Delete current user's profile
  */
 export async function deleteProfile(): Promise<void> {
-  await apiRequest('/api/v1/profile', {
+  await apiRequest('/profile', {
     method: 'DELETE',
   });
 }
@@ -146,7 +171,7 @@ export async function deleteProfile(): Promise<void> {
  * Get all documents for current user
  */
 export async function getDocuments(): Promise<ApplicantDocument[]> {
-  const response = await apiRequest<ApplicantDocument[]>('/api/v1/profile/documents');
+  const response = await apiRequest<ApplicantDocument[]>('/profile/documents');
   return response.data || [];
 }
 
@@ -154,7 +179,7 @@ export async function getDocuments(): Promise<ApplicantDocument[]> {
  * Get a specific document by ID
  */
 export async function getDocument(docId: string | number): Promise<ApplicantDocument> {
-  const response = await apiRequest<ApplicantDocument>(`/api/v1/profile/documents/${docId}`);
+  const response = await apiRequest<ApplicantDocument>(`/profile/documents/${docId}`);
   if (!response.data) {
     throw new Error('Failed to get document');
   }
@@ -183,7 +208,7 @@ export async function uploadDocument(
     formData.append('is_primary', 'true');
   }
 
-  const response = await apiRequest<ApplicantDocument>('/api/v1/profile/documents', {
+  const response = await apiRequest<ApplicantDocument>('/profile/documents', {
     method: 'POST',
     body: formData,
     headers: {
@@ -204,7 +229,7 @@ export async function updateDocument(
   docId: string | number,
   data: { name?: string; description?: string }
 ): Promise<ApplicantDocument> {
-  const response = await apiRequest<ApplicantDocument>(`/api/v1/profile/documents/${docId}`, {
+  const response = await apiRequest<ApplicantDocument>(`/profile/documents/${docId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
@@ -218,7 +243,7 @@ export async function updateDocument(
  * Delete a document
  */
 export async function deleteDocument(docId: string | number): Promise<void> {
-  await apiRequest(`/api/v1/profile/documents/${docId}`, {
+  await apiRequest(`/profile/documents/${docId}`, {
     method: 'DELETE',
   });
 }
@@ -227,7 +252,7 @@ export async function deleteDocument(docId: string | number): Promise<void> {
  * Set a document as primary
  */
 export async function setPrimaryDocument(docId: string | number): Promise<void> {
-  await apiRequest(`/api/v1/profile/documents/${docId}/primary`, {
+  await apiRequest(`/profile/documents/${docId}/primary`, {
     method: 'POST',
   });
 }

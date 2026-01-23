@@ -9,6 +9,7 @@ import {
   updateDocument,
   deleteDocument,
   setPrimaryDocument,
+  uploadAvatar,
   ApplicantProfile,
   ApplicantDocument,
   UpdateProfileRequest,
@@ -73,6 +74,25 @@ export function useDeleteProfile() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Gagal menghapus profil');
+    },
+  });
+}
+
+/**
+ * Hook to upload avatar
+ */
+export function useUploadAvatar() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => uploadAvatar(file),
+    onSuccess: () => {
+      // Invalidate auth me to get updated avatar_url
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      toast.success('Avatar berhasil diupload');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Gagal mengupload avatar');
     },
   });
 }

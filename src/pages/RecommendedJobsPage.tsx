@@ -12,45 +12,108 @@ import {
   CheckCircle,
   Clock,
   BookOpen,
+  UserCircle,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext.new';
-import { mockJobs } from '@/data/jobs';
-import {
-  getJobRecommendations,
-  buildUserProfile,
-  getScoreColor,
-  getScoreLabel,
-  RecommendationScore,
-} from '@/lib/recommendations';
+import { getRecommendations, RecommendationScore, RecommendationsResponse } from '@/api/recommendations';
+
+// Helper functions for score display
+const getScoreColor = (score: number): string => {
+  if (score >= 80) return '#22c55e'; // green
+  if (score >= 60) return '#eab308'; // yellow
+  if (score >= 40) return '#f97316'; // orange
+  return '#ef4444'; // red
+};
+
+const getScoreLabel = (score: number): string => {
+  if (score >= 85) return 'Sangat Cocok';
+  if (score >= 70) return 'Cocok';
+  if (score >= 50) return 'Cukup Cocok';
+  if (score >= 30) return 'Mungkin Cocok';
+  return 'Tidak Cocok';
+};
+
+// Map job type from API to display
+const formatJobType = (jobType: string): string => {
+  const map: Record<string, string> = {
+    'full_time': 'Full-time',
+    'part_time': 'Part-time',
+    'contract': 'Kontrak',
+    'internship': 'Magang',
+    'freelance': 'Freelance',
+  };
+  return map[jobType] || jobType;
+};
+
+// Format salary
+const formatSalary = (min?: number, max?: number): string => {
+  if (!min && !max) return 'Gaji Dirahasiakan';
+  const formatNum = (n: number) => {
+    if (n >= 1000000) return `${(n / 1000000).toFixed(0)} jt`;
+    if (n >= 1000) return `${(n / 1000).toFixed(0)} rb`;
+    return n.toString();
+  };
+  if (min && max) return `Rp ${formatNum(min)} - ${formatNum(max)}`;
+  if (min) return `Rp ${formatNum(min)}+`;
+  if (max) return `< Rp ${formatNum(max)}`;
+  return 'Gaji Dirahasiakan';
+};
+
+// Parse requirements from string to array
+const parseRequirements = (requirements?: string): string[] => {
+  if (!requirements) return [];
+  // Try to parse as JSON array first
+  try {
+    const parsed = JSON.parse(requirements);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {
+    // Not JSON, split by newline or bullet points
+  }
+  // Split by common delimiters
+  return requirements
+    .split(/[\n•\-\*]/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+};
 
 const RecommendedJobsPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [recommendations, setRecommendations] = useState<RecommendationScore[]>([]);
+  const [stats, setStats] = useState<Omit<RecommendationsResponse, 'recommendations'> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<number | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      // Simulate CV data for now
-      const mockCVData = {
-        skills: ['JavaScript', 'React', 'TypeScript', 'SQL'],
-        preferredCategory: 'Teknologi',
-        location: 'DKI Jakarta',
-        totalExperience: 3,
-      };
-
-      const userProfile = buildUserProfile(user, mockCVData);
-      const recs = getJobRecommendations(userProfile, mockJobs, 12);
-      
-      // Simulate loading delay
-      setTimeout(() => {
-        setRecommendations(recs);
-        setLoading(false);
-      }, 600);
+      fetchRecommendations();
+    } else {
+      setLoading(false);
     }
   }, [user, isAuthenticated]);
+
+  const fetchRecommendations = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getRecommendations(20);
+      setRecommendations(response.recommendations || []);
+      setStats({
+        total_jobs: response.total_jobs,
+        matched_jobs: response.matched_jobs,
+        average_score: response.average_score,
+        profile_complete: response.profile_complete,
+      });
+    } catch (err) {
+      console.error('Failed to fetch recommendations:', err);
+      setError('Gagal memuat rekomendasi. Silakan coba lagi.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isAuthenticated || !user) {
     return (
@@ -83,17 +146,48 @@ const RecommendedJobsPage: React.FC = () => {
           <div className="inline-block mb-4">
             <Badge className="gap-2 px-4 py-2 bg-primary/10 text-primary border-primary/30">
               <Sparkles className="w-4 h-4" />
-              Personalized
+              Personalized AI
             </Badge>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Lowongan Direkomendasikan untuk Anda
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Berdasarkan profil, skills, dan preferensi lokasi Anda, kami merekomendasikan lowongan yang paling cocok.
-            Semakin tinggi persentase, semakin cocok lowongan untuk Anda.
+            Berdasarkan <strong>skills</strong>, <strong>pengalaman kerja</strong>, dan <strong>preferensi</strong> Anda,
+            kami merekomendasikan lowongan yang paling cocok.
           </p>
         </motion.div>
+
+        {/* Profile Incomplete Warning */}
+        {stats && !stats.profile_complete && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-4"
+          >
+            <AlertCircle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground mb-1">Lengkapi Profil Anda</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Untuk hasil rekomendasi yang lebih akurat, lengkapi CV dan profil Anda dengan skills, pengalaman kerja, dan preferensi pekerjaan.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link to="/cv">
+                  <Button size="sm" variant="outline" className="gap-2">
+                    <FileText className="w-4 h-4" />
+                    Lengkapi CV
+                  </Button>
+                </Link>
+                <Link to="/profile">
+                  <Button size="sm" variant="outline" className="gap-2">
+                    <UserCircle className="w-4 h-4" />
+                    Update Preferensi
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Stats */}
         <motion.div
@@ -106,21 +200,19 @@ const RecommendedJobsPage: React.FC = () => {
             {[
               {
                 label: 'Lowongan Cocok',
-                value: recommendations.length,
+                value: stats?.matched_jobs || recommendations.length,
                 icon: CheckCircle,
                 color: 'from-green-500/20 to-green-500/5',
               },
               {
                 label: 'Rata-rata Match',
-                value: recommendations.length > 0 
-                  ? Math.round(recommendations.reduce((sum, r) => sum + r.score, 0) / recommendations.length) + '%'
-                  : '0%',
+                value: stats?.average_score ? `${stats.average_score}%` : '0%',
                 icon: TrendingUp,
                 color: 'from-blue-500/20 to-blue-500/5',
               },
               {
-                label: 'Total Lowongan',
-                value: mockJobs.length,
+                label: 'Total Lowongan Aktif',
+                value: stats?.total_jobs || 0,
                 icon: Briefcase,
                 color: 'from-purple-500/20 to-purple-500/5',
               },
@@ -181,40 +273,52 @@ const RecommendedJobsPage: React.FC = () => {
                     }`}
                   >
                     {/* Main Content */}
-                    <button
+                    <div
                       onClick={() => setSelectedJob(isExpanded ? null : rec.job.id)}
-                      className="w-full p-6 text-left hover:bg-muted/50 transition-colors"
+                      className="w-full p-6 text-left hover:bg-muted/50 transition-colors cursor-pointer"
                     >
                       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-start">
                         {/* Job Info */}
                         <div className="flex gap-4">
-                          <img
-                            src={rec.job.companyLogo}
-                            alt={rec.job.company}
-                            className="w-16 h-16 rounded-lg object-cover bg-muted"
-                          />
+                          {rec.job.company?.logo_url ? (
+                            <img
+                              src={rec.job.company.logo_url}
+                              alt={rec.job.company?.name || 'Company'}
+                              className="w-16 h-16 rounded-lg object-cover bg-muted flex-shrink-0"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0 ${rec.job.company?.logo_url ? 'hidden' : ''}`}>
+                            <span className="text-2xl font-bold text-primary">
+                              {(rec.job.company?.name || 'C').charAt(0).toUpperCase()}
+                            </span>
+                          </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="text-lg font-bold text-foreground mb-2 truncate">
                               {rec.job.title}
                             </h3>
                             <p className="text-sm text-muted-foreground mb-3 truncate">
-                              {rec.job.company} • {rec.job.location}
+                              {rec.job.company?.name || 'Unknown Company'} • {rec.job.location}
                             </p>
 
                             {/* Tags */}
                             <div className="flex flex-wrap gap-2">
                               <Badge variant="secondary" className="gap-1">
                                 <MapPin className="w-3 h-3" />
-                                {rec.job.province}
+                                {rec.job.location}
                               </Badge>
                               <Badge variant="outline" className="gap-1">
                                 <Briefcase className="w-3 h-3" />
-                                {rec.job.jobType}
+                                {formatJobType(rec.job.jobType)}
                               </Badge>
                               {rec.job.salaryMin && (
                                 <Badge variant="outline" className="gap-1">
                                   <DollarSign className="w-3 h-3" />
-                                  {rec.job.salaryMin.toLocaleString('id-ID')}
+                                  Rp. {rec.job.salaryMin.toLocaleString('id-ID')}
                                 </Badge>
                               )}
                             </div>
@@ -283,7 +387,7 @@ const RecommendedJobsPage: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                    </button>
+                    </div>
 
                     {/* Expanded Details */}
                     {isExpanded && (
@@ -295,14 +399,14 @@ const RecommendedJobsPage: React.FC = () => {
                         className="border-t border-border bg-muted/30 px-6 py-4 space-y-4"
                       >
                         {/* Match Reasons */}
-                        {rec.matchReasons.length > 0 && (
+                        {rec.match_reasons && rec.match_reasons.length > 0 && (
                           <div>
                             <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
                               <CheckCircle className="w-4 h-4 text-green-500" />
                               Alasan Match
                             </h4>
                             <ul className="space-y-1">
-                              {rec.matchReasons.map((reason, idx) => (
+                              {rec.match_reasons.map((reason, idx) => (
                                 <li
                                   key={idx}
                                   className="text-sm text-muted-foreground flex items-start gap-2"
@@ -316,14 +420,14 @@ const RecommendedJobsPage: React.FC = () => {
                         )}
 
                         {/* Mismatch Reasons */}
-                        {rec.mismatchReasons.length > 0 && (
+                        {rec.mismatch_reasons && rec.mismatch_reasons.length > 0 && (
                           <div>
                             <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
                               <AlertCircle className="w-4 h-4 text-orange-500" />
                               Hal untuk Dipertimbangkan
                             </h4>
                             <ul className="space-y-1">
-                              {rec.mismatchReasons.map((reason, idx) => (
+                              {rec.mismatch_reasons.map((reason, idx) => (
                                 <li
                                   key={idx}
                                   className="text-sm text-muted-foreground flex items-start gap-2"
@@ -353,16 +457,28 @@ const RecommendedJobsPage: React.FC = () => {
                             Persyaratan Utama
                           </h4>
                           <div className="flex flex-wrap gap-2">
-                            {rec.job.requirements.slice(0, 5).map((req, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                {req}
-                              </Badge>
-                            ))}
-                            {rec.job.requirements.length > 5 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{rec.job.requirements.length - 5} lagi
-                              </Badge>
-                            )}
+                            {(() => {
+                              const reqs = parseRequirements(rec.job.requirements);
+                              return (
+                                <>
+                                  {reqs.slice(0, 5).map((req, idx) => (
+                                    <Badge key={idx} variant="secondary" className="text-xs">
+                                      {req}
+                                    </Badge>
+                                  ))}
+                                  {reqs.length > 5 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      +{reqs.length - 5} lagi
+                                    </Badge>
+                                  )}
+                                  {reqs.length === 0 && (
+                                    <span className="text-sm text-muted-foreground">
+                                      Tidak ada persyaratan spesifik
+                                    </span>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                       </motion.div>
@@ -417,14 +533,10 @@ const RecommendedJobsPage: React.FC = () => {
           <p className="text-sm text-muted-foreground mb-4">
             Sistem rekomendasi kami menganalisis beberapa faktor untuk menemukan lowongan terbaik untuk Anda:
           </p>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-muted-foreground">
+          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-muted-foreground">
             <li className="flex gap-2">
-              <span className="text-primary font-semibold">30%</span>
-              <span>Kesesuaian kategori pekerjaan</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-primary font-semibold">25%</span>
-              <span>Kecocokan lokasi atau work from home</span>
+              <span className="text-primary font-semibold">35%</span>
+              <span>Kecocokan skills</span>
             </li>
             <li className="flex gap-2">
               <span className="text-primary font-semibold">25%</span>
@@ -432,7 +544,15 @@ const RecommendedJobsPage: React.FC = () => {
             </li>
             <li className="flex gap-2">
               <span className="text-primary font-semibold">20%</span>
-              <span>Skill yang dibutuhkan</span>
+              <span>Kecocokan lokasi</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-primary font-semibold">10%</span>
+              <span>Kesesuaian gaji</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-primary font-semibold">10%</span>
+              <span>Jenis pekerjaan</span>
             </li>
           </ul>
         </motion.div>

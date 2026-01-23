@@ -96,12 +96,17 @@ export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { skipAuth = false, headers: customHeaders, ...rest } = options;
+  const { skipAuth = false, headers: customHeaders, body, ...rest } = options;
 
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...customHeaders,
-  };
+  // Check if body is FormData - if so, don't set Content-Type
+  const isFormData = body instanceof FormData;
+
+  const headers: HeadersInit = isFormData
+    ? { ...customHeaders }
+    : {
+        'Content-Type': 'application/json',
+        ...customHeaders,
+      };
 
   // Add auth header if token exists and not skipped
   if (!skipAuth) {
@@ -116,6 +121,7 @@ export async function apiRequest<T = unknown>(
   try {
     const response = await fetch(url, {
       ...rest,
+      body,
       headers,
       credentials: 'include', // For refresh token cookies
     });
@@ -132,6 +138,7 @@ export async function apiRequest<T = unknown>(
         }
         const retryResponse = await fetch(url, {
           ...rest,
+          body,
           headers,
           credentials: 'include',
         });

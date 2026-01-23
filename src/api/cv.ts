@@ -24,7 +24,7 @@ export interface Education {
   field_of_study: string;
   start_date: string;
   end_date?: string;
-  gpa?: number;
+  gpa?: string; // Backend expects string
   description?: string;
 }
 
@@ -68,6 +68,8 @@ export interface CVData {
   certifications: Certification[];
   languages: Language[];
   completeness?: number;
+  completeness_score?: number; // Backend sends this
+  last_updated_at?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -102,13 +104,37 @@ export async function getCV(): Promise<CVData | null> {
  * Create or update CV
  */
 export async function saveCV(data: CVRequest): Promise<CVData> {
-  const response = await api.post<CVData>(ENDPOINTS.CV.CREATE_OR_UPDATE, data);
-  
-  if (!response.data) {
-    throw new Error('Failed to save CV');
+  try {
+    // Ensure all required fields are present
+    if (!data.personal_info?.full_name || !data.personal_info?.email) {
+      throw new Error('Full name and email are required');
+    }
+    
+    // Sanitize education data - ensure GPA is string
+    const sanitizedEducation = data.education?.map(edu => ({
+      ...edu,
+      gpa: edu.gpa !== undefined ? String(edu.gpa) : undefined,
+    })) || [];
+    
+    const sanitizedData: CVRequest = {
+      ...data,
+      education: sanitizedEducation,
+    };
+    
+    console.log('📤 Sending CV to backend:', JSON.stringify(sanitizedData, null, 2));
+    const response = await api.post<CVData>(ENDPOINTS.CV.CREATE_OR_UPDATE, sanitizedData);
+    
+    if (!response.data) {
+      throw new Error('Failed to save CV');
+    }
+    
+    console.log('✅ CV saved successfully:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Failed to save CV:', error);
+    console.error('Error details:', error.response?.data);
+    throw error;
   }
-  
-  return response.data;
 }
 
 /**

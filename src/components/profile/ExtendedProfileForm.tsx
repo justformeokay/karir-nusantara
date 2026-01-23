@@ -56,7 +56,8 @@ import {
   formatFileSize,
   formatSalary,
 } from '@/api/profile';
-import { API_BASE_URL } from '@/api/config';
+import { getCV, saveCV, CVRequest } from '@/api/cv';
+import { STATIC_BASE_URL } from '@/api/config';
 
 // Provinces in Indonesia
 const PROVINCES = [
@@ -70,6 +71,26 @@ const PROVINCES = [
   'Sulawesi Tenggara', 'Sulawesi Utara', 'Sumatera Barat',
   'Sumatera Selatan', 'Sumatera Utara',
 ];
+
+// Salary formatter helper functions
+const formatSalaryInput = (value: string): string => {
+  // Remove all non-digit characters
+  const cleaned = value.replace(/\D/g, '');
+  if (!cleaned) return '';
+  
+  // Add thousand separators
+  return cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const formatSalaryDisplay = (value: number | undefined): string => {
+  if (!value) return '';
+  return `Rp. ${value.toLocaleString('id-ID')}`;
+};
+
+const parseSalaryInput = (value: string): number | undefined => {
+  const cleaned = value.replace(/\D/g, '');
+  return cleaned ? parseInt(cleaned, 10) : undefined;
+};
 
 const JOB_TYPES = [
   { value: 'full_time', label: 'Full Time' },
@@ -95,6 +116,8 @@ export const ExtendedProfileForm: React.FC<ExtendedProfileFormProps> = ({ onSave
   const [formData, setFormData] = useState<UpdateProfileRequest>({});
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
   const [isDirty, setIsDirty] = useState(false);
+  const [salaryMinDisplay, setSalaryMinDisplay] = useState<string>('');
+  const [salaryMaxDisplay, setSalaryMaxDisplay] = useState<string>('');
 
   // Initialize form data when profile is loaded
   useEffect(() => {
@@ -122,6 +145,13 @@ export const ExtendedProfileForm: React.FC<ExtendedProfileFormProps> = ({ onSave
         willing_to_relocate: profile.willing_to_relocate,
       });
       setSelectedJobTypes(profile.preferred_job_types || []);
+      // Initialize salary display values
+      if (profile.expected_salary_min) {
+        setSalaryMinDisplay(formatSalaryInput(String(profile.expected_salary_min)));
+      }
+      if (profile.expected_salary_max) {
+        setSalaryMaxDisplay(formatSalaryInput(String(profile.expected_salary_max)));
+      }
     }
   }, [profile]);
 
@@ -140,12 +170,55 @@ export const ExtendedProfileForm: React.FC<ExtendedProfileFormProps> = ({ onSave
     });
   };
 
+  const handleSalaryMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatSalaryInput(e.target.value);
+    setSalaryMinDisplay(formatted);
+    const parsed = parseSalaryInput(formatted);
+    handleInputChange('expected_salary_min', parsed);
+  };
+
+  const handleSalaryMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatSalaryInput(e.target.value);
+    setSalaryMaxDisplay(formatted);
+    const parsed = parseSalaryInput(formatted);
+    handleInputChange('expected_salary_max', parsed);
+  };
+
   const handleSubmit = async () => {
     try {
       await updateProfileMutation.mutateAsync({
         ...formData,
         preferred_job_types: selectedJobTypes,
       });
+      
+      // Also sync shared fields to CV
+      try {
+        const existingCV = await getCV();
+        if (existingCV) {
+          // Update CV with profile data
+          const updatedCV: CVRequest = {
+            personal_info: {
+              ...existingCV.personal_info,
+              address: formData.address || existingCV.personal_info.address,
+              city: formData.city || existingCV.personal_info.city,
+              province: formData.province || existingCV.personal_info.province,
+              summary: formData.professional_summary || existingCV.personal_info.summary,
+              linkedin: formData.linkedin_url || existingCV.personal_info.linkedin,
+              portfolio: formData.portfolio_url || existingCV.personal_info.portfolio,
+            },
+            education: existingCV.education,
+            experience: existingCV.experience,
+            skills: existingCV.skills,
+            certifications: existingCV.certifications,
+            languages: existingCV.languages,
+          };
+          await saveCV(updatedCV);
+        }
+      } catch (cvError) {
+        // CV sync is secondary, don't fail the whole save
+        console.warn('CV sync failed:', cvError);
+      }
+      
       setIsDirty(false);
       onSaved?.();
     } catch (error) {
@@ -468,23 +541,37 @@ export const ExtendedProfileForm: React.FC<ExtendedProfileFormProps> = ({ onSave
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="expected_salary_min">Ekspektasi Gaji (Min)</Label>
-              <Input
-                id="expected_salary_min"
-                type="number"
-                value={formData.expected_salary_min || ''}
-                onChange={(e) => handleInputChange('expected_salary_min', parseInt(e.target.value) || undefined)}
-                placeholder="5000000"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm font-medium">Rp.</span>
+                <Input
+                  id="expected_salary_min"
+                  type="text"
+                  value={salaryMinDisplay}
+                  onChange={handleSalaryMinChange}
+                  placeholder="5.000.000"
+                  className="pl-10"
+                />
+              </div>
+              {formData.expected_salary_min && (
+                <p className="text-xs text-muted-foreground">{formatSalaryDisplay(formData.expected_salary_min)}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="expected_salary_max">Ekspektasi Gaji (Max)</Label>
-              <Input
-                id="expected_salary_max"
-                type="number"
-                value={formData.expected_salary_max || ''}
-                onChange={(e) => handleInputChange('expected_salary_max', parseInt(e.target.value) || undefined)}
-                placeholder="10000000"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm font-medium">Rp.</span>
+                <Input
+                  id="expected_salary_max"
+                  type="text"
+                  value={salaryMaxDisplay}
+                  onChange={handleSalaryMaxChange}
+                  placeholder="10.000.000"
+                  className="pl-10"
+                />
+              </div>
+              {formData.expected_salary_max && (
+                <p className="text-xs text-muted-foreground">{formatSalaryDisplay(formData.expected_salary_max)}</p>
+              )}
             </div>
           </div>
 
@@ -496,6 +583,7 @@ export const ExtendedProfileForm: React.FC<ExtendedProfileFormProps> = ({ onSave
                 type="date"
                 value={formData.available_from || ''}
                 onChange={(e) => handleInputChange('available_from', e.target.value)}
+                min="2000-01-01"
               />
             </div>
             <div className="flex items-center space-x-2 pt-8">
@@ -599,7 +687,7 @@ export const ExtendedProfileForm: React.FC<ExtendedProfileFormProps> = ({ onSave
                       asChild
                     >
                       <a
-                        href={`${API_BASE_URL}${doc.document_url}`}
+                        href={`${STATIC_BASE_URL}${doc.document_url}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

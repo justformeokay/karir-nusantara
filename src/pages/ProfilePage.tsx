@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -20,6 +20,16 @@ import {
   X,
   Save,
   Loader2,
+  Camera,
+  GraduationCap,
+  Code,
+  Award,
+  Languages,
+  MapPin,
+  ExternalLink,
+  Linkedin,
+  Globe,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,8 +47,12 @@ import {
 import { useAuth } from '@/contexts/AuthContext.new';
 import { useApplications } from '@/contexts/ApplicationContext.new';
 import { useWishlist, useRemoveFromWishlist, useWishlistStats } from '@/hooks/useWishlist';
+import { useUploadAvatar } from '@/hooks/useProfile';
+import { STATIC_BASE_URL } from '@/api/config';
 import { toast } from 'sonner';
 import ExtendedProfileForm from '@/components/profile/ExtendedProfileForm';
+import { getCV, CVData } from '@/api/cv';
+import CVPDFGenerator from '@/components/cv/CVPDFGenerator';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,6 +61,8 @@ const ProfilePage: React.FC = () => {
   const { data: wishlistData, isLoading: wishlistLoading } = useWishlist();
   const { data: wishlistStats } = useWishlistStats();
   const removeFromWishlistMutation = useRemoveFromWishlist();
+  const uploadAvatarMutation = useUploadAvatar();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   
   const [activeTab, setActiveTab] = useState<'applications' | 'saved' | 'cv' | 'profile'>('applications');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -56,6 +72,29 @@ const ProfilePage: React.FC = () => {
     email: user?.email || '',
     phone: user?.phone || '',
   });
+  
+  // CV State
+  const [cvData, setCvData] = useState<CVData | null>(null);
+  const [cvLoading, setCvLoading] = useState(false);
+  
+  // Load CV data when CV tab is active
+  useEffect(() => {
+    if (activeTab === 'cv' && !cvData && !cvLoading) {
+      loadCVData();
+    }
+  }, [activeTab]);
+  
+  const loadCVData = async () => {
+    try {
+      setCvLoading(true);
+      const data = await getCV();
+      setCvData(data);
+    } catch (error) {
+      console.error('Failed to load CV:', error);
+    } finally {
+      setCvLoading(false);
+    }
+  };
 
   // Get saved jobs from API
   const savedJobs = wishlistData?.items || [];
@@ -89,6 +128,31 @@ const ProfilePage: React.FC = () => {
     setIsEditModalOpen(false);
   };
 
+  const handleAvatarClick = () => {
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File terlalu besar. Maksimal 5MB');
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Format file tidak valid. Gunakan JPG, PNG, GIF, atau WEBP');
+      return;
+    }
+
+    uploadAvatarMutation.mutate(file);
+    e.target.value = '';
+  };
+
   const handleRemoveApplication = (appId: string) => {
     // For now just show toast - would need withdraw API
     toast.success('Lamaran berhasil dihapus');
@@ -118,6 +182,15 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gradient-to-b from-muted/50 to-background">
       <div className="container mx-auto px-4">
+        {/* Hidden file input for avatar upload */}
+        <input
+          type="file"
+          ref={avatarInputRef}
+          onChange={handleAvatarChange}
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+        />
+
         {/* Profile Header with Background */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -135,9 +208,26 @@ const ProfilePage: React.FC = () => {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg"
+                    className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg overflow-hidden group cursor-pointer"
+                    onClick={handleAvatarClick}
                   >
-                    <UserIcon className="w-12 h-12 text-primary-foreground" />
+                    {user.avatarUrl ? (
+                      <img
+                        src={`${STATIC_BASE_URL}${user.avatarUrl}`}
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <UserIcon className="w-12 h-12 text-primary-foreground" />
+                    )}
+                    {/* Overlay for upload */}
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      {uploadAvatarMutation.isPending ? (
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      ) : (
+                        <Camera className="w-6 h-6 text-white" />
+                      )}
+                    </div>
                   </motion.div>
                   <div className="flex-1">
                     <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
@@ -366,7 +456,7 @@ const ProfilePage: React.FC = () => {
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         {getStatusBadge(app.currentStatus)}
                         <div className="flex gap-2">
-                          <Link to={`/lowongan/${job.hashId || job.id}`}>
+                          <Link to={`/lowongan/${job.id}`}>
                             <Button variant="outline" size="sm" className="gap-1">
                               <ArrowRight className="w-3 h-3" />
                               <span className="hidden sm:inline">Detail</span>
@@ -473,7 +563,7 @@ const ProfilePage: React.FC = () => {
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <Badge variant="secondary">{job.jobType}</Badge>
                         <div className="flex gap-2">
-                          <Link to={`/lowongan/${job.hashId || job.id}`}>
+                          <Link to={`/lowongan/${job.id}`}>
                             <Button variant="outline" size="sm" className="gap-1">
                               <ArrowRight className="w-3 h-3" />
                               <span className="hidden sm:inline">Detail</span>
@@ -502,37 +592,352 @@ const ProfilePage: React.FC = () => {
 
             {/* CV Tab */}
             <TabsContent value="cv" className="p-6 md:p-8 m-0">
-              <div className="py-16 text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-500/5 flex items-center justify-center mx-auto mb-6"
-                >
-                  <FileText className="w-10 h-10 text-purple-500" />
-                </motion.div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Kelola CV Anda
-                </h3>
-                <p className="text-muted-foreground mb-2 max-w-md mx-auto">
-                  Buat atau upload CV profesional Anda untuk meningkatkan peluang diterima oleh perusahaan impian.
-                </p>
-                <p className="text-sm text-muted-foreground mb-8 max-w-md mx-auto">
-                  CV yang lengkap dan menarik adalah kunci untuk membuat kesan pertama yang baik kepada recruiter.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link to="/buat-cv">
-                    <Button size="lg" className="gap-2">
-                      <FileText className="w-4 h-4" />
-                      Buat CV Baru
-                    </Button>
-                  </Link>
-                  <Button size="lg" variant="outline" className="gap-2">
-                    <ArrowRight className="w-4 h-4" />
-                    Upload CV
-                  </Button>
+              {cvLoading ? (
+                <div className="py-20 flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-              </div>
+              ) : cvData ? (
+                /* Display CV Data */
+                <div className="space-y-8">
+                  {/* Header with Actions */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-border">
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground mb-1">CV Anda</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Terakhir diupdate: {new Date(cvData.updated_at || '').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Link to="/cv">
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <Edit2 className="w-4 h-4" />
+                          Edit CV
+                        </Button>
+                      </Link>
+                      <CVPDFGenerator 
+                        data={{
+                          personalInfo: {
+                            full_name: cvData.personal_info?.full_name || '',
+                            email: cvData.personal_info?.email || '',
+                            phone: cvData.personal_info?.phone || '',
+                            address: cvData.personal_info?.address || '',
+                            city: cvData.personal_info?.city || '',
+                            province: cvData.personal_info?.province || '',
+                            summary: cvData.personal_info?.summary || '',
+                            linkedin: cvData.personal_info?.linkedin || '',
+                            portfolio: cvData.personal_info?.portfolio || '',
+                            photo_url: user?.avatarUrl ? `${STATIC_BASE_URL}${user.avatarUrl}` : '',
+                          },
+                          education: cvData.education || [],
+                          experience: cvData.experience || [],
+                          skills: cvData.skills || [],
+                          certifications: cvData.certifications || [],
+                          languages: cvData.languages || [],
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Completeness Score */}
+                  <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground">Kelengkapan CV</span>
+                      <span className="text-sm font-bold text-primary">{(cvData.completeness_score || cvData.completeness || 0)}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(cvData.completeness_score || cvData.completeness || 0)}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full"
+                      />
+                    </div>
+                    {(cvData.completeness_score || cvData.completeness || 0) < 100 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Lengkapi CV Anda untuk meningkatkan peluang diterima
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Personal Info */}
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      <UserIcon className="w-5 h-5 text-primary" />
+                      Informasi Pribadi
+                    </h4>
+                    <div className="bg-muted/30 rounded-xl p-5 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {user?.avatarUrl ? (
+                            <img src={`${STATIC_BASE_URL}${user.avatarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            <UserIcon className="w-8 h-8 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="text-lg font-bold text-foreground">{cvData.personal_info?.full_name || '-'}</h5>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
+                            <span className="flex items-center gap-1">
+                              <Mail className="w-3.5 h-3.5" />
+                              {cvData.personal_info?.email || '-'}
+                            </span>
+                            {cvData.personal_info?.phone && (
+                              <span className="flex items-center gap-1">
+                                <Phone className="w-3.5 h-3.5" />
+                                {cvData.personal_info.phone}
+                              </span>
+                            )}
+                          </div>
+                          {cvData.personal_info?.address && (
+                            <p className="text-sm text-muted-foreground mt-1 flex items-start gap-1">
+                              <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                              {cvData.personal_info.address}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {cvData.personal_info?.summary && (
+                        <div className="pt-3 border-t border-border">
+                          <p className="text-sm text-muted-foreground whitespace-pre-line">{cvData.personal_info.summary}</p>
+                        </div>
+                      )}
+                      
+                      {/* Social Links */}
+                      {(cvData.personal_info?.linkedin || cvData.personal_info?.portfolio) && (
+                        <div className="pt-3 border-t border-border flex flex-wrap gap-3">
+                          {cvData.personal_info?.linkedin && (
+                            <a 
+                              href={cvData.personal_info.linkedin.startsWith('http') ? cvData.personal_info.linkedin : `https://${cvData.personal_info.linkedin}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                            >
+                              <Linkedin className="w-4 h-4" />
+                              LinkedIn
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                          {cvData.personal_info?.portfolio && (
+                            <a 
+                              href={cvData.personal_info.portfolio.startsWith('http') ? cvData.personal_info.portfolio : `https://${cvData.personal_info.portfolio}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                            >
+                              <Globe className="w-4 h-4" />
+                              Portfolio
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Experience */}
+                  {cvData.experience && cvData.experience.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Briefcase className="w-5 h-5 text-primary" />
+                        Pengalaman Kerja
+                        <Badge variant="secondary" className="ml-2">{cvData.experience.length}</Badge>
+                      </h4>
+                      <div className="space-y-4">
+                        {cvData.experience.map((exp, index) => (
+                          <motion.div 
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="relative pl-6 pb-4 border-l-2 border-primary/30 last:pb-0"
+                          >
+                            <div className="absolute left-0 top-0 w-3 h-3 -translate-x-[7px] rounded-full bg-primary" />
+                            <div className="bg-muted/30 rounded-lg p-4">
+                              <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                                <div>
+                                  <h5 className="font-semibold text-foreground">{exp.position}</h5>
+                                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                    <Building2 className="w-3.5 h-3.5" />
+                                    {exp.company}
+                                    {exp.location && <span className="text-muted-foreground/60">• {exp.location}</span>}
+                                  </p>
+                                </div>
+                                <Badge variant={exp.is_current ? 'default' : 'outline'} className="text-xs">
+                                  {exp.is_current ? 'Sekarang' : exp.end_date ? new Date(exp.end_date).getFullYear() : '-'}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-2">
+                                {new Date(exp.start_date).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })} - {exp.is_current ? 'Sekarang' : exp.end_date ? new Date(exp.end_date).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }) : '-'}
+                              </p>
+                              {exp.description && (
+                                <p className="text-sm text-muted-foreground whitespace-pre-line">{exp.description}</p>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Education */}
+                  {cvData.education && cvData.education.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <GraduationCap className="w-5 h-5 text-primary" />
+                        Pendidikan
+                        <Badge variant="secondary" className="ml-2">{cvData.education.length}</Badge>
+                      </h4>
+                      <div className="grid gap-3">
+                        {cvData.education.map((edu, index) => (
+                          <motion.div 
+                            key={index}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="bg-muted/30 rounded-lg p-4 flex items-start gap-4"
+                          >
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <GraduationCap className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-foreground">{edu.institution}</h5>
+                              <p className="text-sm text-muted-foreground">{edu.degree} - {edu.field_of_study}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {edu.start_date} - {edu.end_date || 'Sekarang'}
+                                {edu.gpa && <span className="ml-2">• IPK: {edu.gpa}</span>}
+                              </p>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Skills */}
+                  {cvData.skills && cvData.skills.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Code className="w-5 h-5 text-primary" />
+                        Keahlian
+                        <Badge variant="secondary" className="ml-2">{cvData.skills.length}</Badge>
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {cvData.skills.map((skill, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <Badge 
+                              variant="secondary" 
+                              className="px-3 py-1.5 text-sm bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            >
+                              {skill.name}
+                              {skill.level && (
+                                <span className="ml-1.5 text-xs opacity-70 capitalize">• {skill.level}</span>
+                              )}
+                            </Badge>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Certifications */}
+                  {cvData.certifications && cvData.certifications.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Award className="w-5 h-5 text-primary" />
+                        Sertifikasi
+                        <Badge variant="secondary" className="ml-2">{cvData.certifications.length}</Badge>
+                      </h4>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {cvData.certifications.map((cert, index) => (
+                          <motion.div 
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border border-yellow-500/20 rounded-lg p-4"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                                <Award className="w-5 h-5 text-yellow-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h5 className="font-semibold text-foreground truncate">{cert.name}</h5>
+                                <p className="text-sm text-muted-foreground">{cert.issuer}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Diterbitkan: {new Date(cert.issue_date).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })}
+                                </p>
+                                {cert.credential_id && (
+                                  <p className="text-xs text-muted-foreground">
+                                    ID: {cert.credential_id}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Languages */}
+                  {cvData.languages && cvData.languages.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Languages className="w-5 h-5 text-primary" />
+                        Bahasa
+                        <Badge variant="secondary" className="ml-2">{cvData.languages.length}</Badge>
+                      </h4>
+                      <div className="flex flex-wrap gap-3">
+                        {cvData.languages.map((lang, index) => (
+                          <div key={index} className="inline-flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
+                            <span className="font-medium text-foreground">{lang.name}</span>
+                            <Badge variant="outline" className="text-xs capitalize">{lang.proficiency}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* No CV - Show CTA */
+                <div className="py-16 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-500/5 flex items-center justify-center mx-auto mb-6"
+                  >
+                    <FileText className="w-10 h-10 text-purple-500" />
+                  </motion.div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    Kelola CV Anda
+                  </h3>
+                  <p className="text-muted-foreground mb-2 max-w-md mx-auto">
+                    Buat atau upload CV profesional Anda untuk meningkatkan peluang diterima oleh perusahaan impian.
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-8 max-w-md mx-auto">
+                    CV yang lengkap dan menarik adalah kunci untuk membuat kesan pertama yang baik kepada recruiter.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link to="/cv">
+                      <Button size="lg" className="gap-2">
+                        <FileText className="w-4 h-4" />
+                        Buat CV Baru
+                      </Button>
+                    </Link>
+                    <Button size="lg" variant="outline" className="gap-2">
+                      <ArrowRight className="w-4 h-4" />
+                      Upload CV
+                    </Button>
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             {/* Extended Profile Tab */}

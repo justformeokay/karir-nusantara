@@ -1,5 +1,6 @@
 // API Configuration
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api/v1';
+export const STATIC_BASE_URL = import.meta.env.VITE_STATIC_URL || 'http://localhost:8081';
 
 // Token storage keys
 export const ACCESS_TOKEN_KEY = 'karir_access_token';
@@ -54,5 +55,10 @@ export const ENDPOINTS = {
   // Companies (Public)
   COMPANIES: {
     BY_HASH_ID: (hashId: string) => `/companies/${hashId}`,
+  },
+  
+  // Recommendations
+  RECOMMENDATIONS: {
+    GET: '/recommendations',
   },
 } as const;

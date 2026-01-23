@@ -13,6 +13,7 @@ import JobDetailPage from "@/pages/JobDetailPage";
 import CompanyDetailPage from "@/pages/CompanyDetailPage";
 import CVBuilderPage from "@/pages/CVBuilderPage";
 import CVCheckerPage from "@/pages/CVCheckerPage";
+import CVPage from "@/pages/CVPage";
 import ProfilePage from "@/pages/ProfilePage";
 import ApplicationTipsPage from "@/pages/ApplicationTipsPage";
 import RecommendedJobsPage from "@/pages/RecommendedJobsPage";
@@ -58,6 +59,7 @@ const App = () => (
                   <Route path="/lowongan/:id" element={<JobDetailPage />} />
                   <Route path="/perusahaan/:id" element={<CompanyDetailPage />} />
                   <Route path="/buat-cv" element={<CVBuilderPage />} />
+                  <Route path="/cv" element={<CVPage />} />
                   <Route path="/check-cv" element={<CVCheckerPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/tips-melamar" element={<ApplicationTipsPage />} />

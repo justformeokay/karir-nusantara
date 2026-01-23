@@ -20,6 +20,7 @@ export interface User {
   email: string;
   name: string;
   phone?: string;
+  avatarUrl?: string;
 }
 
 interface AuthContextType {
@@ -52,6 +53,7 @@ function transformUser(apiUser: ApiUser): User {
     email: apiUser.email,
     name: apiUser.full_name,
     phone: apiUser.phone,
+    avatarUrl: apiUser.avatar_url,
   };
 }
 
@@ -149,6 +151,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         full_name: name,
         email,
         password,
+        role: 'job_seeker', // This is job seeker portal, always set role to job_seeker
         ...(phone && { phone }),
       };
 

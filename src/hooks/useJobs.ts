@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import {
   listJobs,
   getJobById,
@@ -16,6 +16,7 @@ export const jobKeys = {
   all: ['jobs'] as const,
   lists: () => [...jobKeys.all, 'list'] as const,
   list: (params: JobListParams) => [...jobKeys.lists(), params] as const,
+  infinite: (params: Omit<JobListParams, 'page'>) => [...jobKeys.lists(), 'infinite', params] as const,
   details: () => [...jobKeys.all, 'detail'] as const,
   detail: (id: string | number) => [...jobKeys.details(), id] as const,
   slug: (slug: string) => [...jobKeys.details(), 'slug', slug] as const,
@@ -62,18 +63,27 @@ export function useJobBySlug(slug: string | undefined) {
 }
 
 /**
- * Hook for infinite scrolling job list
+ * Hook for infinite scrolling job list - fetches 10 jobs per page
  */
-export function useInfiniteJobs(params: Omit<JobListParams, 'page'>) {
-  const queryClient = useQueryClient();
-
-  return useQuery({
-    queryKey: jobKeys.list(params),
-    queryFn: async () => {
-      const result = await listJobs({ ...params, page: 1 });
+export function useInfiniteJobs(params: Omit<JobListParams, 'page' | 'per_page'>) {
+  return useInfiniteQuery({
+    queryKey: jobKeys.infinite(params),
+    queryFn: async ({ pageParam = 1 }) => {
+      const result = await listJobs({ 
+        ...params, 
+        page: pageParam, 
+        per_page: 10 
+      });
       return result;
     },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage.meta) return undefined;
+      const { page, total_pages } = lastPage.meta;
+      return page < total_pages ? page + 1 : undefined;
+    },
     staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
