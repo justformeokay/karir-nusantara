@@ -1,15 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, FileText, Users, Building2, TrendingUp, CheckCircle, ArrowRight, Briefcase, Star, Download, Code2, Megaphone, Landmark, Palette, Headphones, UserCheck, ShoppingCart, Cog, BookOpen, Heart, HardHat, Factory } from 'lucide-react';
+import { Search, FileText, Users, Building2, TrendingUp, CheckCircle, ArrowRight, Briefcase, Star, Download, Code2, Megaphone, Landmark, Palette, Headphones, UserCheck, ShoppingCart, Cog, BookOpen, Heart, HardHat, Factory, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/jobs/SearchBar';
 import JobCard from '@/components/jobs/JobCard';
-import { mockJobs, jobCategories } from '@/data/jobs';
+import { jobCategories } from '@/data/jobs';
+import { listJobs, Job } from '@/api/jobs';
 import heroImage from '@/assets/hero-image.png';
 
 const HomePage: React.FC = () => {
-  const featuredJobs = mockJobs.slice(0, 4);
+  const [featuredJobs, setFeaturedJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedJobs = async () => {
+      try {
+        setLoading(true);
+        // Fetch 4 latest active jobs, sorted by published date
+        const response = await listJobs({
+          page: 1,
+          per_page: 4,
+          sort_by: 'published_at',
+          sort_order: 'desc',
+        });
+        setFeaturedJobs(response.jobs);
+      } catch (error) {
+        console.error('Failed to fetch featured jobs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedJobs();
+  }, []);
 
   const stats = [
     { icon: Briefcase, value: '10,000+', label: 'Lowongan Aktif' },
@@ -144,20 +168,34 @@ const HomePage: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {featuredJobs.map((job, index) => (
-              <JobCard key={job.id} job={job} index={index} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          ) : featuredJobs.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {featuredJobs.map((job, index) => (
+                  <JobCard key={job.id} job={job} index={index} />
+                ))}
+              </div>
 
-          <div className="text-center">
-            <Link to="/lowongan">
-              <Button size="lg" variant="outline">
-                Lihat Semua Lowongan
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
+              <div className="text-center">
+                <Link to="/lowongan">
+                  <Button size="lg" variant="outline">
+                    Lihat Semua Lowongan
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-20">
+              <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg">Belum ada lowongan tersedia saat ini</p>
+              <p className="text-sm text-muted-foreground mt-2">Silakan kembali lagi nanti</p>
+            </div>
+          )}
         </div>
       </section>
 

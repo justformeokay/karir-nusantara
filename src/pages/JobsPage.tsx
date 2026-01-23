@@ -5,9 +5,9 @@ import { Briefcase, SearchX, Loader2, Plus } from 'lucide-react';
 import SearchBar from '@/components/jobs/SearchBar';
 import JobFilters from '@/components/jobs/JobFilters';
 import JobCard from '@/components/jobs/JobCard';
-import { mockJobs, salaryRanges, type Job as MockJob } from '@/data/jobs';
+import { salaryRanges } from '@/data/jobs';
 import { useJobs } from '@/hooks/useJobs';
-import { type Job as ApiJob, getJobTypeLabel } from '@/api/jobs';
+import { type Job as ApiJob } from '@/api/jobs';
 
 const JobsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,31 +39,14 @@ const JobsPage: React.FC = () => {
     per_page: 50,
   });
 
-  // Transform API jobs to frontend format or use mock data as fallback
+  // Transform API jobs to frontend format or use empty array as fallback
   const jobs = useMemo(() => {
     if (apiResponse?.jobs && apiResponse.jobs.length > 0) {
-      // Transform API format to frontend format (JobCard expects MockJob format)
-      return apiResponse.jobs.map((apiJob: ApiJob): MockJob => ({
-        id: String(apiJob.id),
-        title: apiJob.title,
-        company: apiJob.company?.name || 'Unknown Company',
-        companyLogo: apiJob.company?.logo_url || '',
-        location: apiJob.location || `${apiJob.city}, ${apiJob.province}`,
-        province: apiJob.province || '',
-        type: getJobTypeLabel(apiJob.jobType) as MockJob['type'],
-        category: 'Teknologi', // Default category
-        salaryMin: apiJob.salaryMin,
-        salaryMax: apiJob.salaryMax,
-        description: apiJob.description || '',
-        requirements: apiJob.requirements?.split('\n').filter(Boolean) || [],
-        benefits: apiJob.benefits?.split('\n').filter(Boolean) || [],
-        responsibilities: [], // Not available from API
-        postedDate: apiJob.createdAt || new Date().toISOString(),
-        isRemote: apiJob.isRemote || false,
-      }));
+      // API jobs are already in correct ApiJob format - just return them
+      return apiResponse.jobs;
     }
-    // Fallback to mock data if API returns empty or error
-    return mockJobs;
+    // Return empty array if no API data (don't use mock data for jobs page)
+    return [];
   }, [apiResponse]);
 
   const handleSearch = (newKeyword: string) => {
@@ -95,8 +78,8 @@ const JobsPage: React.FC = () => {
   // Client-side filtering for additional filters not supported by API
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
-      // Category filter (client-side since API might not support it yet)
-      if (filters.category !== 'all' && job.category !== filters.category) {
+      // Province filter
+      if (filters.province !== 'all' && job.province !== filters.province) {
         return false;
       }
 

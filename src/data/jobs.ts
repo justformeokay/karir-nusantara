@@ -3,8 +3,11 @@ export interface Job {
   title: string;
   company: string;
   companyLogo: string;
+  companyCity?: string;
+  companyProvince?: string;
   location: string;
   province: string;
+  city?: string;
   type: 'Full-time' | 'Part-time' | 'Freelance' | 'Magang' | 'Kontrak';
   category: string;
   salaryMin?: number;
@@ -350,7 +353,10 @@ export const mockJobs: Job[] = [
 
 export const formatSalary = (amount: number): string => {
   if (amount >= 1000000) {
-    return `Rp ${(amount / 1000000).toFixed(0)} jt`;
+    // Show 1 decimal place for millions (2.4jt instead of 2jt)
+    const millions = amount / 1000000;
+    const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1);
+    return `Rp ${formatted} jt`;
   }
   return `Rp ${amount.toLocaleString('id-ID')}`;
 };

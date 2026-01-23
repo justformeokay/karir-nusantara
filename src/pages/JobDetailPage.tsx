@@ -22,11 +22,11 @@ import { useAuth } from '@/contexts/AuthContext.new';
 import { useApplications } from '@/contexts/ApplicationContext.new';
 import AuthModal from '@/components/auth/AuthModal';
 import { toast } from 'sonner';
-import { useJob } from '@/hooks/useJobs';
+import { useJob, useJobBySlug } from '@/hooks/useJobs';
 import { getJobTypeLabel } from '@/api/jobs';
 
 const JobDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { applyToJob, hasAppliedToJob } = useApplications();
@@ -34,8 +34,8 @@ const JobDetailPage: React.FC = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
 
-  // Try to fetch from API first
-  const { data: apiJob, isLoading, isError } = useJob(id ? parseInt(id, 10) : undefined);
+  // Fetch from API using slug
+  const { data: apiJob, isLoading, isError } = useJobBySlug(slug);
 
   // Transform API job to frontend format or use mock data as fallback
   const job: Job | undefined = useMemo(() => {
@@ -44,9 +44,12 @@ const JobDetailPage: React.FC = () => {
         id: String(apiJob.id),
         title: apiJob.title,
         company: apiJob.company?.name || 'Unknown Company',
-        companyLogo: apiJob.company?.logo_url || '',
+        companyLogo: apiJob.company?.logo_url ? `http://localhost:8081${apiJob.company.logo_url}` : '',
+        companyCity: apiJob.company?.city,
+        companyProvince: apiJob.company?.province,
         location: apiJob.location || `${apiJob.city}, ${apiJob.province}`,
         province: apiJob.province || '',
+        city: apiJob.city || '',
         type: getJobTypeLabel(apiJob.jobType) as Job['type'],
         category: 'Teknologi',
         salaryMin: apiJob.salaryMin,
@@ -65,10 +68,10 @@ const JobDetailPage: React.FC = () => {
       };
     }
     // Fallback to mock data
-    return mockJobs.find(j => j.id === id);
-  }, [apiJob, id]);
+    return mockJobs.find(j => j.slug === slug || j.id === slug);
+  }, [apiJob, slug]);
 
-  const hasAlreadyApplied = id ? hasAppliedToJob(id) : false;
+  const hasAlreadyApplied = slug ? hasAppliedToJob(slug) : false;
 
   if (isLoading) {
     return (
@@ -189,9 +192,12 @@ const JobDetailPage: React.FC = () => {
               <div className="bg-card border border-border rounded-xl p-6 md:p-8">
                 <div className="flex flex-col md:flex-row gap-6">
                   <img
-                    src={job.companyLogo}
+                    src={job.companyLogo || `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&background=667eea&color=fff&size=128`}
                     alt={job.company}
                     className="w-20 h-20 rounded-xl object-cover bg-muted"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&background=667eea&color=fff&size=128`;
+                    }}
                   />
                   <div className="flex-1">
                     <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
@@ -325,9 +331,12 @@ const JobDetailPage: React.FC = () => {
                   </h3>
                   <div className="flex items-center gap-4 mb-4">
                     <img
-                      src={job.companyLogo}
+                      src={job.companyLogo || `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&background=667eea&color=fff&size=128`}
                       alt={job.company}
                       className="w-14 h-14 rounded-xl object-cover bg-muted"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&background=667eea&color=fff&size=128`;
+                      }}
                     />
                     <div>
                       <p className="font-semibold text-foreground">{job.company}</p>
@@ -335,7 +344,7 @@ const JobDetailPage: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {job.province}, Indonesia
+                    {job.companyCity && `${job.companyCity}`}{job.companyCity && job.companyProvince && ', '}{job.companyProvince && `${job.companyProvince}`}{(job.companyCity || job.companyProvince) && ', Indonesia'}
                   </p>
                 </div>
 

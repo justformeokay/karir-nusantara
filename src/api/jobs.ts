@@ -18,6 +18,12 @@ export interface JobLocation {
   is_remote: boolean;
 }
 
+export interface JobSalary {
+  min?: number;
+  max?: number;
+  currency: string;
+}
+
 // API Response format from backend
 export interface JobApiResponse {
   id: number;
@@ -30,10 +36,7 @@ export interface JobApiResponse {
   location: JobLocation;
   job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'freelance';
   experience_level: 'entry' | 'junior' | 'mid' | 'senior' | 'lead' | 'executive';
-  salary_min?: number;
-  salary_max?: number;
-  salary_currency?: string;
-  is_salary_visible?: boolean;
+  salary?: JobSalary; // Nested salary object from backend
   skills?: string[];
   company: JobCompany;
   status: 'draft' | 'active' | 'paused' | 'closed' | 'filled';
@@ -114,10 +117,10 @@ function transformJob(apiJob: JobApiResponse): Job {
     isRemote: apiJob.location?.is_remote || false,
     jobType: apiJob.job_type,
     experienceLevel: apiJob.experience_level,
-    salaryMin: apiJob.salary_min,
-    salaryMax: apiJob.salary_max,
-    salaryCurrency: apiJob.salary_currency || 'IDR',
-    isSalaryVisible: apiJob.is_salary_visible ?? true,
+    salaryMin: apiJob.salary?.min,
+    salaryMax: apiJob.salary?.max,
+    salaryCurrency: apiJob.salary?.currency || 'IDR',
+    isSalaryVisible: !!apiJob.salary, // If salary object exists, it's visible
     skills: apiJob.skills || [],
     company: apiJob.company,
     status: apiJob.status,

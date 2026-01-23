@@ -54,7 +54,7 @@ const App = () => (
                 <Route element={<Layout />}>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/lowongan" element={<JobsPage />} />
-                  <Route path="/lowongan/:id" element={<JobDetailPage />} />
+                  <Route path="/lowongan/:slug" element={<JobDetailPage />} />
                   <Route path="/buat-cv" element={<CVBuilderPage />} />
                   <Route path="/check-cv" element={<CVCheckerPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
