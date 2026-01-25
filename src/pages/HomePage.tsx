@@ -7,11 +7,19 @@ import SearchBar from '@/components/jobs/SearchBar';
 import JobCard from '@/components/jobs/JobCard';
 import { jobCategories } from '@/data/jobs';
 import { listJobs, Job } from '@/api/jobs';
+import { useAppliedJobIds } from '@/hooks/useApplications';
+import { useAuth } from '@/contexts/AuthContext.new';
 import heroImage from '@/assets/hero-image.png';
 
 const HomePage: React.FC = () => {
   const [featuredJobs, setFeaturedJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Check if user is authenticated
+  const { isAuthenticated } = useAuth();
+
+  // Fetch applied job IDs for logged-in users
+  const { hasApplied } = useAppliedJobIds();
 
   useEffect(() => {
     const fetchFeaturedJobs = async () => {
@@ -176,7 +184,12 @@ const HomePage: React.FC = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {featuredJobs.map((job, index) => (
-                  <JobCard key={job.id} job={job} index={index} />
+                  <JobCard 
+                    key={job.id} 
+                    job={job} 
+                    index={index} 
+                    isApplied={isAuthenticated && hasApplied(job.id)}
+                  />
                 ))}
               </div>
 

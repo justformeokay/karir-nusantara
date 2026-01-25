@@ -6,6 +6,7 @@ import {
   getApplicationTimeline,
   withdrawApplication,
   hasAppliedToJob,
+  getAccessToken,
   type Application,
   type ApplicationListParams,
   type ApplyRequest,
@@ -122,5 +123,47 @@ export function useInvalidateApplications() {
 
   return () => {
     queryClient.invalidateQueries({ queryKey: applicationKeys.all });
+  };
+}
+
+/**
+ * Hook to get all applied job IDs for the current user
+ * Returns a Set of job IDs that the user has already applied to
+ * Only fetches when user is authenticated (has access token)
+ */
+export function useAppliedJobIds() {
+  const isAuthenticated = !!getAccessToken();
+  
+  const { data, isLoading, ...rest } = useQuery({
+    queryKey: [...applicationKeys.all, 'appliedJobIds'] as const,
+    queryFn: async () => {
+      // Fetch all applications (with high limit to get all)
+      const response = await getMyApplications({ limit: 500 });
+      // Extract job IDs from applications
+      const jobIds = new Set<number>();
+      response.data.forEach(app => {
+        if (app.job_id) {
+          jobIds.add(app.job_id);
+        }
+        // Also check job.id if job_id is not directly available
+        if (app.job?.id) {
+          jobIds.add(app.job.id);
+        }
+      });
+      return Array.from(jobIds);
+    },
+    enabled: isAuthenticated, // Only fetch when authenticated
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  // Convert array back to Set for O(1) lookup
+  const appliedJobIds = new Set<number>(data || []);
+
+  return {
+    appliedJobIds,
+    isLoading,
+    hasApplied: (jobId: number) => appliedJobIds.has(jobId),
+    ...rest,
   };
 }

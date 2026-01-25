@@ -10,6 +10,7 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
+  CheckCircle2,
   Clock,
   BookOpen,
   UserCircle,
@@ -18,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext.new';
+import { useAppliedJobIds } from '@/hooks/useApplications';
 import { getRecommendations, RecommendationScore, RecommendationsResponse } from '@/api/recommendations';
 
 // Helper functions for score display
@@ -86,6 +88,9 @@ const RecommendedJobsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<number | null>(null);
+
+  // Fetch applied job IDs for logged-in users
+  const { hasApplied } = useAppliedJobIds();
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -298,9 +303,17 @@ const RecommendedJobsPage: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-foreground mb-2 truncate">
-                              {rec.job.title}
-                            </h3>
+                            <div className="flex items-start gap-3 mb-2">
+                              <h3 className="text-lg font-bold text-foreground truncate">
+                                {rec.job.title}
+                              </h3>
+                              {hasApplied(rec.job.id) && (
+                                <Badge className="gap-1 whitespace-nowrap bg-green-100 text-green-700 border-green-300">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Sudah Dilamar
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-sm text-muted-foreground mb-3 truncate">
                               {rec.job.company?.name || 'Unknown Company'} • {rec.job.location}
                             </p>

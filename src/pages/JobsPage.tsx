@@ -7,6 +7,8 @@ import JobFilters from '@/components/jobs/JobFilters';
 import JobCard from '@/components/jobs/JobCard';
 import { salaryRanges } from '@/data/jobs';
 import { useInfiniteJobs } from '@/hooks/useJobs';
+import { useAppliedJobIds } from '@/hooks/useApplications';
+import { useAuth } from '@/contexts/AuthContext.new';
 import { type Job as ApiJob } from '@/api/jobs';
 
 // Map frontend job types to backend API format
@@ -31,6 +33,12 @@ const JobsPage: React.FC = () => {
     type: 'all',
     salaryRange: '0',
   });
+
+  // Check if user is authenticated
+  const { isAuthenticated } = useAuth();
+
+  // Fetch applied job IDs for logged-in users
+  const { hasApplied } = useAppliedJobIds();
 
   // Debounce keyword for API calls
   useEffect(() => {
@@ -252,7 +260,12 @@ const JobsPage: React.FC = () => {
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {filteredJobs.map((job, index) => (
-                <JobCard key={job.id} job={job} index={index} />
+                <JobCard 
+                  key={job.id} 
+                  job={job} 
+                  index={index} 
+                  isApplied={isAuthenticated && hasApplied(job.id)}
+                />
               ))}
             </div>
             

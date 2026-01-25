@@ -199,6 +199,17 @@ const ProfilePage: React.FC = () => {
     );
   };
 
+  const formatJobType = (jobType: string): string => {
+    const typeMap: Record<string, string> = {
+      'full_time': 'Full-time',
+      'part_time': 'Part-time',
+      'contract': 'Kontrak',
+      'internship': 'Magang',
+      'freelance': 'Freelance',
+    };
+    return typeMap[jobType] || jobType;
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gradient-to-b from-muted/50 to-background">
       <div className="container mx-auto px-4">
@@ -569,15 +580,27 @@ const ProfilePage: React.FC = () => {
                       className="flex flex-col md:flex-row gap-4 md:items-center justify-between p-5 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all group"
                     >
                       <div className="flex gap-4 flex-1">
-                        <div className="w-14 h-14 rounded-lg bg-red-500/10 flex items-center justify-center">
-                          <Heart className="w-6 h-6 text-red-500" />
+                        {/* Company Logo */}
+                        <div className="w-14 h-14 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center flex-shrink-0">
+                          {job.company?.logoUrl ? (
+                            <img
+                              src={`http://localhost:8081${job.company.logoUrl}`}
+                              alt={job.company?.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <Building2 className="w-6 h-6 text-gray-400" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                             {job.title}
                           </h3>
                           <p className="text-sm text-muted-foreground mb-2 truncate">
-                            {job.company.name} • {job.location}
+                            {job.company?.name} • {job.location}
                           </p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Heart className="w-3 h-3" />
@@ -592,7 +615,7 @@ const ProfilePage: React.FC = () => {
                       </div>
 
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <Badge variant="secondary">{job.jobType}</Badge>
+                        <Badge variant="secondary">{formatJobType(job.jobType)}</Badge>
                         <div className="flex gap-2">
                           <Link to={`/lowongan/${job.id}`}>
                             <Button variant="outline" size="sm" className="gap-1">

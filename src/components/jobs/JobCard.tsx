@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Briefcase, Zap, Wifi } from 'lucide-react';
+import { MapPin, Clock, Briefcase, Zap, Wifi, CheckCircle2 } from 'lucide-react';
 import { Job as ApiJob } from '@/api/jobs';
 import { Badge } from '@/components/ui/badge';
 
 interface JobCardProps {
   job: ApiJob;
   index?: number;
+  isApplied?: boolean;
 }
 
 // Helper functions
@@ -54,7 +55,7 @@ const formatJobType = (jobType: string): string => {
   return types[jobType] || jobType;
 };
 
-const JobCard: React.FC<JobCardProps> = ({ job, index = 0 }) => {
+const JobCard: React.FC<JobCardProps> = ({ job, index = 0, isApplied = false }) => {
   const companyName = job.company?.name || 'Unknown Company';
   const companyLogoUrl = job.company?.logo_url 
     ? `http://localhost:8081${job.company.logo_url}` 
@@ -67,7 +68,14 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0 }) => {
       transition={{ duration: 0.4, delay: index * 0.1 }}
     >
       <Link to={`/lowongan/${job.hashId || job.id}`}>
-        <div className="group bg-card border border-border rounded-xl p-5 hover:shadow-card-hover transition-all duration-300 hover:border-primary/30">
+        <div className={`group bg-card border rounded-xl p-5 hover:shadow-card-hover transition-all duration-300 hover:border-primary/30 ${isApplied ? 'border-green-300 bg-green-50/30' : 'border-border'}`}>
+          {/* Applied Badge */}
+          {isApplied && (
+            <div className="flex items-center gap-1.5 text-green-600 mb-3 -mt-1">
+              <CheckCircle2 className="w-4 h-4" />
+              <span className="text-xs font-medium">Sudah Dilamar</span>
+            </div>
+          )}
           <div className="flex gap-4">
             {/* Company Logo */}
             <div className="flex-shrink-0">
