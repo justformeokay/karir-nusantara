@@ -209,6 +209,39 @@ export async function getJobBySlug(slug: string): Promise<Job | null> {
   }
 }
 
+/**
+ * Track job view - called when a job seeker views a job detail
+ * @returns true if this is a new view, false if already viewed
+ */
+export async function trackJobView(jobId: string | number): Promise<boolean> {
+  try {
+    const response = await api.post<{ is_new_view: boolean }>(
+      ENDPOINTS.JOBS.TRACK_VIEW(jobId)
+    );
+    return response.data?.is_new_view ?? false;
+  } catch {
+    // Silently fail - don't interrupt user experience
+    console.warn('Failed to track job view');
+    return false;
+  }
+}
+
+/**
+ * Track job share - called when a user shares a job
+ * @param platform Optional platform name (whatsapp, telegram, facebook, twitter, copy_link, etc)
+ */
+export async function trackJobShare(jobId: string | number, platform?: string): Promise<void> {
+  try {
+    await api.post(
+      ENDPOINTS.JOBS.TRACK_SHARE(jobId),
+      { platform: platform || '' }
+    );
+  } catch {
+    // Silently fail - don't interrupt user experience
+    console.warn('Failed to track job share');
+  }
+}
+
 // ============================================
 // HELPER FUNCTIONS
 // ============================================

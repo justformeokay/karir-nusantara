@@ -23,6 +23,8 @@ export const ENDPOINTS = {
     BY_ID: (id: string) => `/jobs/${id}`,
     BY_SLUG: (slug: string) => `/jobs/slug/${slug}`,
     COMPANY: '/jobs/company',
+    TRACK_VIEW: (id: string | number) => `/jobs/${id}/view`,
+    TRACK_SHARE: (id: string | number) => `/jobs/${id}/share`,
   },
   
   // CV

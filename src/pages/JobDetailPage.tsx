@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -23,7 +23,7 @@ import { useApplications } from '@/contexts/ApplicationContext.new';
 import AuthModal from '@/components/auth/AuthModal';
 import { toast } from 'sonner';
 import { useJob } from '@/hooks/useJobs';
-import { getJobTypeLabel, type Job } from '@/api/jobs';
+import { getJobTypeLabel, trackJobView, trackJobShare, type Job } from '@/api/jobs';
 
 const JobDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +33,7 @@ const JobDetailPage: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const hasTrackedView = useRef(false);
 
   // Fetch from API using id (supports hash_id)
   const { data: apiJob, isLoading, isError } = useJob(id);
@@ -41,6 +42,14 @@ const JobDetailPage: React.FC = () => {
   const job = apiJob;
 
   const hasAlreadyApplied = id ? hasAppliedToJob(id) : false;
+
+  // Track job view when user is authenticated and job is loaded
+  useEffect(() => {
+    if (isAuthenticated && job && id && !hasTrackedView.current) {
+      hasTrackedView.current = true;
+      trackJobView(id);
+    }
+  }, [isAuthenticated, job, id]);
 
   if (isLoading) {
     return (
@@ -114,6 +123,8 @@ const JobDetailPage: React.FC = () => {
   const handleShare = async () => {
     // Copy link ke clipboard
     const jobUrl = window.location.href;
+    let platform = 'copy_link';
+    
     try {
       await navigator.clipboard.writeText(jobUrl);
       toast.success('Link lowongan berhasil disalin ke clipboard!');
@@ -123,11 +134,21 @@ const JobDetailPage: React.FC = () => {
 
     // Jika browser support native share, tunjukkan dialog
     if (navigator.share) {
-      await navigator.share({
-        title: job.title,
-        text: `Lowongan ${job.title} di ${job.company}`,
-        url: jobUrl,
-      });
+      try {
+        await navigator.share({
+          title: job.title,
+          text: `Lowongan ${job.title} di ${job.company.name}`,
+          url: jobUrl,
+        });
+        platform = 'native_share';
+      } catch {
+        // User cancelled share or share failed
+      }
+    }
+
+    // Track the share action if authenticated
+    if (isAuthenticated && id) {
+      trackJobShare(id, platform);
     }
   };
 
