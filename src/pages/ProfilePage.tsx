@@ -165,11 +165,31 @@ const ProfilePage: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const statusMap = {
       pending: { label: 'Menunggu', variant: 'secondary' as const, icon: Clock },
-      reviewed: { label: 'Sedang Ditinjau', variant: 'default' as const, icon: CheckCircle },
+      submitted: { label: 'Terkirim', variant: 'secondary' as const, icon: Clock },
+      viewed: { label: 'Sedang Ditinjau', variant: 'default' as const, icon: CheckCircle },
+      reviewing: { label: 'Sedang Ditinjau', variant: 'default' as const, icon: CheckCircle },
+      shortlisted: { label: 'Lolos Seleksi', variant: 'default' as const, icon: CheckCircle },
+      interview_scheduled: { label: 'Jadwal Interview', variant: 'default' as const, icon: CheckCircle },
+      interview_completed: { label: 'Interview Selesai', variant: 'default' as const, icon: CheckCircle },
+      offer_extended: { label: 'Penawaran', variant: 'default' as const, icon: CheckCircle },
+      hired: { label: 'Diterima', variant: 'default' as const, icon: CheckCircle },
       accepted: { label: 'Diterima', variant: 'default' as const, icon: CheckCircle },
       rejected: { label: 'Ditolak', variant: 'destructive' as const, icon: AlertCircle },
+      withdrawn: { label: 'Dibatalkan', variant: 'secondary' as const, icon: AlertCircle },
     };
+    
     const info = statusMap[status as keyof typeof statusMap];
+    
+    // Fallback jika status tidak dikenal
+    if (!info) {
+      return (
+        <Badge variant="secondary" className="gap-1">
+          <Clock className="w-3 h-3" />
+          {status || 'Unknown'}
+        </Badge>
+      );
+    }
+    
     const Icon = info.icon;
     return (
       <Badge variant={info.variant} className="gap-1">

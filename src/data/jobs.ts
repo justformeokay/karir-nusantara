@@ -1,5 +1,6 @@
 export interface Job {
   id: string;
+  hashId?: string;  // Optional field for hash-based IDs
   title: string;
   company: string;
   companyLogo: string;

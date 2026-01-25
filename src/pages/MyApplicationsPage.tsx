@@ -221,7 +221,7 @@ export default function MyApplicationsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Lamaran Saya</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2 mt-12">Lamaran Saya</h1>
             <p className="text-blue-100">
               Pantau progress semua lamaran pekerjaanmu di satu tempat
             </p>

@@ -12,6 +12,7 @@ import {
   type ApplicationStatus as ApiApplicationStatus,
   type TimelineEvent as ApiTimelineEvent,
 } from '@/api';
+import { STATIC_BASE_URL } from '@/api/config';
 import type { Job } from '@/data/jobs';
 
 // ============================================
@@ -117,7 +118,9 @@ const ApplicationContext = createContext<ApplicationContextType | undefined>(und
 // ============================================
 
 function transformApiApplication(api: ApiApplication): Application {
-  const status = API_TO_FRONTEND_STATUS[api.status] || 'submitted';
+  // API returns current_status, not status
+  const apiStatus = api.current_status || api.status || 'submitted';
+  const status = API_TO_FRONTEND_STATUS[apiStatus] || 'submitted';
   const appliedAt = api.applied_at || new Date().toISOString();
   const now = new Date();
   const appliedDate = new Date(appliedAt);
@@ -141,29 +144,43 @@ function transformApiApplication(api: ApiApplication): Application {
     });
   }
 
+  // Build location from city and province if location not available
+  const jobLocation = api.job?.location || 
+    (api.job?.city && api.job?.province 
+      ? `${api.job.city}, ${api.job.province}` 
+      : api.job?.city || api.job?.province || '');
+
+  // Build full logo URL from relative path
+  const getFullLogoUrl = (logoUrl?: string): string => {
+    if (!logoUrl) return '';
+    if (logoUrl.startsWith('http')) return logoUrl;
+    return `${STATIC_BASE_URL}${logoUrl}`;
+  };
+
   return {
     id: String(api.id),
-    jobId: String(api.job_id),
+    jobId: api.job?.hash_id || String(api.job?.id || api.job_id || 0),
     job: api.job ? {
-      id: String(api.job.id),
+      id: api.job.hash_id || String(api.job.id),
+      hashId: api.job.hash_id,
       title: api.job.title,
       company: api.job.company?.name || 'Unknown Company',
-      companyLogo: api.job.company?.logo_url || '',
-      location: api.job.location || '',
+      companyLogo: getFullLogoUrl(api.job.company?.logo_url),
+      location: jobLocation,
       type: (api.job.jobType as Application['job']['type']) || 'Full-time',
     } : {
-      id: String(api.job_id),
+      id: String(api.job_id || 0),
       title: 'Unknown Position',
       company: 'Unknown Company',
       companyLogo: '',
       location: '',
       type: 'Full-time',
     },
-    applicantId: String(api.user_id),
+    applicantId: String(api.user_id || 0),
     appliedAt,
     currentStatus: status,
     timeline,
-    lastUpdatedAt: api.updated_at || appliedAt,
+    lastUpdatedAt: api.last_status_update || api.updated_at || appliedAt,
     isActive: !['rejected', 'withdrawn', 'hired'].includes(status),
     hasResponse: status !== 'submitted',
     daysInCurrentStatus: daysInStatus,

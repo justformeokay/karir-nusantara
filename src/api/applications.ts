@@ -26,18 +26,43 @@ export interface TimelineEvent {
   created_by?: string;
 }
 
+// Job info dalam application response (simplified)
+export interface ApplicationJob {
+  id: number;
+  hash_id: string;
+  title: string;
+  company: {
+    id: number;
+    hash_id: string;
+    name: string;
+    logo_url?: string;
+  };
+  city?: string;
+  province?: string;
+  status?: string;
+  jobType?: string;
+  location?: string;
+}
+
 export interface Application {
   id: number;
-  job_id: number;
-  user_id: number;
+  hash_id: string;
+  job_id?: number;
+  user_id?: number;
   cv_snapshot_id?: number;
   cover_letter?: string;
-  status: ApplicationStatus;
+  
+  // API returns current_status, not status
+  status?: ApplicationStatus;
+  current_status: ApplicationStatus;
+  status_label?: string;
+  
   applied_at: string;
-  updated_at: string;
+  updated_at?: string;
+  last_status_update?: string;
   
   // Populated from joins
-  job?: Job;
+  job?: ApplicationJob;
   timeline?: TimelineEvent[];
 }
 
@@ -99,11 +124,22 @@ export async function getMyApplications(
     ? `${ENDPOINTS.APPLICATIONS.MY_APPLICATIONS}?${queryString}`
     : ENDPOINTS.APPLICATIONS.MY_APPLICATIONS;
   
-  const response = await api.get<ApplicationListResponse>(endpoint);
+  // API returns { success, data: [...], meta: {...} }
+  // Not { success, data: { data: [...], meta: {...} } }
+  const response = await api.get<Application[]>(endpoint);
   
-  return response.data ?? { 
-    data: [], 
-    meta: { page: 1, limit: 10, total: 0, total_pages: 0 } 
+  // Extract data (array) and meta from response
+  const applications = response.data || [];
+  const meta = (response as unknown as { meta?: { page: number; per_page: number; total_items: number; total_pages: number } }).meta;
+  
+  return { 
+    data: applications, 
+    meta: meta ? {
+      page: meta.page,
+      limit: meta.per_page,
+      total: Number(meta.total_items),
+      total_pages: meta.total_pages,
+    } : { page: 1, limit: 10, total: 0, total_pages: 0 } 
   };
 }
 
