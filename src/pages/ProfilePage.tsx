@@ -452,8 +452,19 @@ const ProfilePage: React.FC = () => {
                       className="flex flex-col md:flex-row gap-4 md:items-center justify-between p-5 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all group"
                     >
                       <div className="flex gap-4 flex-1">
-                        <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Briefcase className="w-6 h-6 text-primary" />
+                        <div className="w-14 h-14 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center flex-shrink-0">
+                          {job.companyLogo ? (
+                            <img
+                              src={job.companyLogo}
+                              alt={job.company}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <Building2 className="w-6 h-6 text-gray-400" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">

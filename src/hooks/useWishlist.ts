@@ -8,22 +8,35 @@ import {
   type SavedJob,
 } from '@/api/wishlist';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext.new';
+import { getAccessToken } from '@/api/client';
 
 // Query keys
 export const wishlistKeys = {
   all: ['wishlist'] as const,
   list: () => [...wishlistKeys.all, 'list'] as const,
   stats: () => [...wishlistKeys.all, 'stats'] as const,
-  check: (jobId: number) => [...wishlistKeys.all, 'check', jobId] as const,
+  check: (jobId: number | string) => [...wishlistKeys.all, 'check', jobId] as const,
 };
+
+/**
+ * Check if user has a valid token
+ */
+function hasValidToken(): boolean {
+  const token = getAccessToken();
+  return !!token && token.length > 0;
+}
 
 /**
  * Hook to fetch wishlist items
  */
 export function useWishlist(params: { page?: number; per_page?: number } = {}) {
+  const { isAuthenticated } = useAuth();
+  
   return useQuery({
     queryKey: [...wishlistKeys.list(), params],
     queryFn: () => getWishlist(params),
+    enabled: isAuthenticated && hasValidToken(),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
@@ -32,21 +45,27 @@ export function useWishlist(params: { page?: number; per_page?: number } = {}) {
  * Hook to fetch wishlist statistics
  */
 export function useWishlistStats() {
+  const { isAuthenticated } = useAuth();
+  
   return useQuery({
     queryKey: wishlistKeys.stats(),
     queryFn: getWishlistStats,
+    enabled: isAuthenticated && hasValidToken(),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
 /**
  * Hook to check if a job is saved
+ * Supports both numeric jobId and hash_id (string)
  */
-export function useIsJobSaved(jobId: number) {
+export function useIsJobSaved(jobId: number | string) {
+  const { isAuthenticated } = useAuth();
+  
   return useQuery({
     queryKey: wishlistKeys.check(jobId),
     queryFn: () => checkIsJobSaved(jobId),
-    enabled: jobId > 0,
+    enabled: isAuthenticated && hasValidToken() && !!jobId && (typeof jobId === 'string' ? jobId.length > 0 : jobId > 0),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
@@ -107,8 +126,9 @@ export function useRemoveFromWishlist() {
 
 /**
  * Hook to toggle job save status
+ * Supports both numeric jobId and hash_id (string)
  */
-export function useToggleWishlist(jobId: number) {
+export function useToggleWishlist(jobId: number | string) {
   const { data: isSaved, isLoading: isChecking } = useIsJobSaved(jobId);
   const saveMutation = useSaveToWishlist();
   const removeMutation = useRemoveFromWishlist();

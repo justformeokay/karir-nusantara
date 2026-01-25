@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatSalaryRange, getTimeAgo } from '@/data/jobs';
 import { useAuth } from '@/contexts/AuthContext.new';
 import { useApplications } from '@/contexts/ApplicationContext.new';
+import { useToggleWishlist } from '@/hooks/useWishlist';
 import AuthModal from '@/components/auth/AuthModal';
 import { toast } from 'sonner';
 import { useJob } from '@/hooks/useJobs';
@@ -31,12 +32,14 @@ const JobDetailPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const { applyToJob, hasAppliedToJob } = useApplications();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const hasTrackedView = useRef(false);
 
   // Fetch from API using id (supports hash_id)
   const { data: apiJob, isLoading, isError } = useJob(id);
+
+  // Wishlist toggle hook
+  const { isSaved, isLoading: isWishlistLoading, toggle: toggleWishlist } = useToggleWishlist(id || '');
 
   // Use API job directly
   const job = apiJob;
@@ -111,13 +114,17 @@ const JobDetailPage: React.FC = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isAuthenticated) {
       setIsAuthModalOpen(true);
       return;
     }
-    setIsSaved(!isSaved);
-    toast.success(isSaved ? 'Lowongan dihapus dari simpanan' : 'Lowongan disimpan!');
+    
+    try {
+      await toggleWishlist();
+    } catch (error) {
+      // Error already handled by hook
+    }
   };
 
   const handleShare = async () => {
@@ -311,10 +318,15 @@ const JobDetailPage: React.FC = () => {
                     <Button
                       variant="outline"
                       onClick={handleSave}
+                      disabled={isWishlistLoading}
                       className={`flex-1 ${isSaved ? 'text-destructive border-destructive' : ''}`}
                     >
-                      <Heart className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
-                      Simpan
+                      {isWishlistLoading ? (
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      ) : (
+                        <Heart className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                      )}
+                      {isSaved ? 'Tersimpan' : 'Simpan'}
                     </Button>
                     <Button variant="outline" onClick={handleShare} className="flex-1">
                       <Share2 className="w-5 h-5 mr-2" />
