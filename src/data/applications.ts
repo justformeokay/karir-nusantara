@@ -140,6 +140,11 @@ export interface TimelineEvent {
     interviewType?: 'online' | 'onsite';
     interviewLocation?: string;
     interviewLink?: string;
+    meetingPlatform?: string;
+    notificationMethod?: 'whatsapp';
+    contactPerson?: string;
+    contactPhone?: string;
+    scheduledNotes?: string;
     rejectionReason?: string;
     offerDetails?: string;
   };

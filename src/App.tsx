@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext.new";
 import { CVProvider } from "@/contexts/CVContext.new";
 import { ApplicationProvider } from "@/contexts/ApplicationContext.new";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Layout from "@/components/layout/Layout";
 import HomePage from "@/pages/HomePage";
 import JobsPage from "@/pages/JobsPage";
@@ -58,13 +59,37 @@ const App = () => (
                   <Route path="/lowongan" element={<JobsPage />} />
                   <Route path="/lowongan/:id" element={<JobDetailPage />} />
                   <Route path="/perusahaan/:id" element={<CompanyDetailPage />} />
-                  <Route path="/buat-cv" element={<CVBuilderPage />} />
-                  <Route path="/cv" element={<CVPage />} />
-                  <Route path="/check-cv" element={<CVCheckerPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/buat-cv" element={
+                    <ProtectedRoute requiredRole="job_seeker">
+                      <CVBuilderPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/cv" element={
+                    <ProtectedRoute requiredRole="job_seeker">
+                      <CVPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/check-cv" element={
+                    <ProtectedRoute requiredRole="job_seeker">
+                      <CVCheckerPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute requiredRole="job_seeker">
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/tips-melamar" element={<ApplicationTipsPage />} />
-                  <Route path="/rekomendasi" element={<RecommendedJobsPage />} />
-                  <Route path="/lamaran-saya" element={<MyApplicationsPage />} />
+                  <Route path="/rekomendasi" element={
+                    <ProtectedRoute requiredRole="job_seeker">
+                      <RecommendedJobsPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/lamaran-saya" element={
+                    <ProtectedRoute requiredRole="job_seeker">
+                      <MyApplicationsPage />
+                    </ProtectedRoute>
+                  } />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

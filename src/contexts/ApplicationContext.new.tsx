@@ -41,6 +41,11 @@ export interface TimelineEvent {
     interviewType?: 'online' | 'onsite';
     interviewLocation?: string;
     interviewLink?: string;
+    meetingPlatform?: string;
+    notificationMethod?: 'whatsapp';
+    contactPerson?: string;
+    contactPhone?: string;
+    scheduledNotes?: string;
     rejectionReason?: string;
     offerDetails?: string;
   };
@@ -49,7 +54,7 @@ export interface TimelineEvent {
 export interface Application {
   id: string;
   jobId: string;
-  job: Pick<Job, 'id' | 'title' | 'company' | 'companyLogo' | 'location' | 'type'>;
+  job: Pick<Job, 'id' | 'title' | 'company' | 'companyLogo' | 'location' | 'type'> & { hashId?: string };
   applicantId: string;
   appliedAt: string;
   currentStatus: ApplicationStatus;
@@ -126,13 +131,59 @@ function transformApiApplication(api: ApiApplication): Application {
   const appliedDate = new Date(appliedAt);
   const daysInStatus = Math.floor((now.getTime() - appliedDate.getTime()) / (1000 * 60 * 60 * 24));
   
-  const timeline: TimelineEvent[] = (api.timeline || []).map((evt: ApiTimelineEvent) => ({
-    id: String(evt.id),
-    status: API_TO_FRONTEND_STATUS[evt.status] || 'submitted',
-    timestamp: evt.created_at,
-    note: evt.notes,
-    updatedBy: evt.created_by === 'applicant' ? 'applicant' : evt.created_by === 'company' ? 'company' : 'system',
-  }));
+  const timeline: TimelineEvent[] = (api.timeline || []).map((evt: ApiTimelineEvent) => {
+    const metadata: TimelineEvent['metadata'] = {};
+    
+    // Map interview details from backend fields for interview_scheduled status
+    if (evt.status === 'interview_scheduled') {
+      if (evt.scheduled_at) {
+        metadata.interviewDate = evt.scheduled_at;
+      }
+      
+      if (evt.interview_type) {
+        // Map backend interview_type to frontend format
+        if (evt.interview_type === 'online') {
+          metadata.interviewType = 'online';
+          if (evt.meeting_link) {
+            metadata.interviewLink = evt.meeting_link;
+          }
+          if (evt.meeting_platform) {
+            metadata.meetingPlatform = evt.meeting_platform;
+          }
+        } else if (evt.interview_type === 'offline') {
+          metadata.interviewType = 'onsite';
+          metadata.interviewLocation = evt.interview_address || evt.scheduled_location;
+        } else if (evt.interview_type === 'whatsapp_notification') {
+          // WhatsApp notification - they will be notified via WhatsApp
+          metadata.interviewType = 'online';
+          metadata.notificationMethod = 'whatsapp';
+        }
+      }
+      
+      // Add contact information
+      if (evt.contact_person) {
+        metadata.contactPerson = evt.contact_person;
+      }
+      
+      if (evt.contact_phone) {
+        metadata.contactPhone = evt.contact_phone;
+      }
+      
+      // Add scheduled notes
+      if (evt.scheduled_notes) {
+        metadata.scheduledNotes = evt.scheduled_notes;
+      }
+    }
+    
+    return {
+      id: String(evt.id),
+      status: API_TO_FRONTEND_STATUS[evt.status] || 'submitted',
+      timestamp: evt.created_at,
+      note: evt.notes || evt.note,
+      updatedBy: evt.updated_by_type === 'applicant' ? 'applicant' : evt.updated_by_type === 'company' ? 'company' : 'system',
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+    };
+  });
 
   // Default timeline with submitted if empty
   if (timeline.length === 0) {

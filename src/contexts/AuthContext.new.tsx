@@ -19,6 +19,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  role: 'job_seeker' | 'company' | 'admin';
   phone?: string;
   avatarUrl?: string;
 }
@@ -27,6 +28,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  userRole: 'job_seeker' | 'company' | 'admin' | null;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string, phone?: string) => Promise<boolean>;
@@ -52,6 +54,7 @@ function transformUser(apiUser: ApiUser): User {
     id: String(apiUser.id),
     email: apiUser.email,
     name: apiUser.full_name,
+    role: apiUser.role,
     phone: apiUser.phone,
     avatarUrl: apiUser.avatar_url,
   };
@@ -198,6 +201,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         isAuthenticated,
         isLoading,
+        userRole: user?.role ?? null,
         error,
         login,
         register,

@@ -187,13 +187,6 @@ const JobsPage: React.FC = () => {
               Temukan pekerjaan impian Anda dari ribuan lowongan terbaru
             </p>
           </div>
-          <Link
-            to="/dashboard/jobs/create"
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Buat Loker</span>
-          </Link>
         </motion.div>
 
         {/* Search */}

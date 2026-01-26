@@ -13,6 +13,10 @@ import {
   CheckCircle2,
   XCircle,
   Timer,
+  Calendar,
+  Video,
+  Phone,
+  User,
 } from 'lucide-react';
 import {
   Application,
@@ -198,6 +202,175 @@ export function ApplicationCard({
         <div className="mt-4">
           <ProgressIndicator application={application} />
         </div>
+
+        {/* Interview Information - Show when status is interview_scheduled */}
+        {currentStatus === 'interview_scheduled' && timeline.length > 0 && (() => {
+          // Find the interview_scheduled event with metadata
+          const interviewEvent = timeline.find(
+            evt => evt.status === 'interview_scheduled' && evt.metadata
+          );
+          
+          // Also try to find interview event without metadata but with any info
+          const fallbackEvent = !interviewEvent ? timeline.find(
+            evt => evt.status === 'interview_scheduled'
+          ) : null;
+          
+          const eventToUse = interviewEvent || fallbackEvent;
+          if (!eventToUse) return null;
+          
+          const metadata = eventToUse.metadata;
+          const hasInterviewDate = metadata?.interviewDate;
+          const interviewDate = hasInterviewDate ? new Date(metadata.interviewDate!) : null;
+          const now = new Date();
+          const daysUntilInterview = interviewDate ? Math.ceil((interviewDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+          
+          // Check if there's any useful information to show
+          const hasUsefulInfo = hasInterviewDate || 
+            metadata?.interviewType || 
+            metadata?.interviewLocation || 
+            metadata?.interviewLink || 
+            metadata?.contactPerson || 
+            metadata?.contactPhone ||
+            metadata?.scheduledNotes ||
+            metadata?.notificationMethod;
+          
+          // If notification method is WhatsApp but no date, show pending notification message
+          const isWhatsAppNotification = metadata?.notificationMethod === 'whatsapp';
+          
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 space-y-3"
+            >
+              <h4 className="font-semibold text-blue-900 text-sm flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                {hasInterviewDate ? 'Jadwal Interview Anda' : 'Informasi Interview'}
+              </h4>
+              
+              {/* Interview Date & Time - only show if available */}
+              {interviewDate && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm text-blue-900">
+                      {interviewDate.toLocaleDateString('id-ID', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })} pukul {interviewDate.toLocaleTimeString('id-ID', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </span>
+                  </div>
+                  {daysUntilInterview !== null && daysUntilInterview > 0 && (
+                    <p className="text-xs text-blue-600 ml-6">
+                      ({daysUntilInterview} hari lagi)
+                    </p>
+                  )}
+                  {daysUntilInterview !== null && daysUntilInterview === 0 && (
+                    <p className="text-xs text-orange-600 ml-6 font-semibold">
+                      🔔 Hari ini!
+                    </p>
+                  )}
+                  {daysUntilInterview !== null && daysUntilInterview < 0 && (
+                    <p className="text-xs text-gray-500 ml-6">
+                      (Interview sudah berlalu)
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* Pending notification message for WhatsApp notification */}
+              {isWhatsAppNotification && !hasInterviewDate && (
+                <div className="flex items-start gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                  <Phone className="w-4 h-4 text-green-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-green-800 font-medium">Notifikasi via WhatsApp</p>
+                    <p className="text-xs text-green-600 mt-0.5">
+                      Detail jadwal interview akan dikirimkan melalui WhatsApp. Pastikan nomor telepon Anda aktif.
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* No date yet message */}
+              {!hasInterviewDate && !isWhatsAppNotification && !hasUsefulInfo && (
+                <div className="flex items-start gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                  <Clock className="w-4 h-4 text-amber-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-amber-800">Menunggu Konfirmasi Jadwal</p>
+                    <p className="text-xs text-amber-600 mt-0.5">
+                      Perusahaan akan segera menghubungi Anda untuk konfirmasi jadwal interview.
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Interview Type & Link/Location */}
+              {metadata?.interviewType === 'online' && metadata?.interviewLink ? (
+                <div className="flex items-start gap-2">
+                  <Video className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs text-blue-600 font-medium">Interview Online via {metadata.interviewLink.includes('zoom') ? 'Zoom' : metadata.interviewLink.includes('meet.google') ? 'Google Meet' : metadata?.meetingPlatform || 'Video Conference'}</p>
+                    <a
+                      href={metadata.interviewLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium mt-1"
+                    >
+                      <span>Buka Tautan</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              ) : metadata?.interviewType === 'onsite' && metadata?.interviewLocation ? (
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs text-blue-600 font-medium">Lokasi Interview Offline</p>
+                    <p className="text-sm text-blue-900 mt-1">{metadata.interviewLocation}</p>
+                  </div>
+                </div>
+              ) : null}
+              
+              {/* Contact Information */}
+              {(metadata?.contactPerson || metadata?.contactPhone) && (
+                <div className="pt-2 border-t border-blue-200 space-y-2">
+                  {metadata?.contactPerson && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="w-4 h-4 text-blue-600" />
+                      <span className="text-blue-900">
+                        <span className="font-medium">Kontak: </span>{metadata.contactPerson}
+                      </span>
+                    </div>
+                  )}
+                  {metadata?.contactPhone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-blue-600" />
+                      <a
+                        href={`tel:${metadata.contactPhone}`}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {metadata.contactPhone}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Additional Notes */}
+              {metadata?.scheduledNotes && (
+                <div className="pt-2 border-t border-blue-200 text-sm text-blue-800">
+                  <p className="text-xs text-blue-600 font-medium mb-1">📝 Catatan:</p>
+                  <p>{metadata.scheduledNotes}</p>
+                </div>
+              )}
+            </motion.div>
+          );
+        })()}
 
         {/* Days in Current Status Warning */}
         {isActive && daysInCurrentStatus > 7 && (

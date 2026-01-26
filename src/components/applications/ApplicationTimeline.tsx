@@ -16,6 +16,9 @@ import {
   MapPin,
   Video,
   ExternalLink,
+  Phone,
+  User,
+  FileText,
 } from 'lucide-react';
 import {
   TimelineEvent,
@@ -211,37 +214,108 @@ function TimelineEventItem({
                 {/* Note */}
                 {event.note && (
                   <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <p className="text-sm text-gray-700">{event.note}</p>
+                    <div className="flex gap-2">
+                      <FileText className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-gray-700">{event.note}</p>
+                    </div>
                   </div>
                 )}
 
-                {/* Interview Metadata */}
-                {event.metadata?.interviewDate && (
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-blue-700">
-                      <Calendar className="w-4 h-4" />
-                      <span className="font-medium">
-                        {formatTimelineDate(event.metadata.interviewDate)} • {formatTimelineTime(event.metadata.interviewDate)}
-                      </span>
-                    </div>
+                {/* Interview Metadata - Enhanced - Show if there's any interview-related metadata */}
+                {(event.metadata?.interviewDate || event.metadata?.interviewType || event.metadata?.contactPerson || event.metadata?.contactPhone || event.metadata?.scheduledNotes || event.metadata?.interviewLink || event.metadata?.interviewLocation) && (
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
+                    <h5 className="font-semibold text-blue-900 text-sm">📋 Detail Interview</h5>
                     
-                    {event.metadata.interviewType === 'online' && event.metadata.interviewLink && (
-                      <a
-                        href={event.metadata.interviewLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <Video className="w-4 h-4" />
-                        <span>Join Meeting</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
+                    {/* Date & Time - only show if available */}
+                    {event.metadata?.interviewDate && (
+                      <div className="flex items-start gap-3">
+                        <Calendar className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-blue-600 font-medium">Jadwal Interview</p>
+                          <p className="text-sm text-blue-900 font-semibold mt-0.5">
+                            {formatTimelineDate(event.metadata.interviewDate)} • {formatTimelineTime(event.metadata.interviewDate)}
+                          </p>
+                        </div>
+                      </div>
                     )}
                     
-                    {event.metadata.interviewType === 'onsite' && event.metadata.interviewLocation && (
-                      <div className="flex items-center gap-2 text-sm text-blue-700">
-                        <MapPin className="w-4 h-4" />
-                        <span>{event.metadata.interviewLocation}</span>
+                    {/* Pending Schedule Notification - show when status is interview_scheduled but no date yet */}
+                    {!event.metadata?.interviewDate && event.status === 'interview_scheduled' && (
+                      <div className="flex items-start gap-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                        <Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-amber-800 font-medium">Menunggu Konfirmasi Jadwal</p>
+                          <p className="text-xs text-amber-600 mt-0.5">
+                            Perusahaan akan menghubungi Anda untuk konfirmasi jadwal interview.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Interview Type & Location/Link */}
+                    {event.metadata?.interviewType === 'online' && event.metadata?.interviewLink && (
+                      <div className="flex items-start gap-3 pt-2 border-t border-blue-200">
+                        <Video className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-xs text-blue-600 font-medium">Interview Online</p>
+                          <a
+                            href={event.metadata.interviewLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium mt-1.5"
+                          >
+                            <span>Buka Tautan Meeting</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {event.metadata?.interviewType === 'onsite' && event.metadata?.interviewLocation && (
+                      <div className="flex items-start gap-3 pt-2 border-t border-blue-200">
+                        <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-blue-600 font-medium">Lokasi Interview</p>
+                          <p className="text-sm text-blue-900 mt-0.5">{event.metadata.interviewLocation}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Contact Person & Phone */}
+                    {(event.metadata?.contactPerson || event.metadata?.contactPhone) && (
+                      <div className="pt-2 border-t border-blue-200 space-y-2">
+                        {event.metadata?.contactPerson && (
+                          <div className="flex items-start gap-3">
+                            <User className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs text-blue-600 font-medium">Kontak Person</p>
+                              <p className="text-sm text-blue-900 mt-0.5">{event.metadata.contactPerson}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {event.metadata?.contactPhone && (
+                          <div className="flex items-start gap-3">
+                            <Phone className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs text-blue-600 font-medium">Nomor Kontak</p>
+                              <a 
+                                href={`tel:${event.metadata.contactPhone}`}
+                                className="text-sm text-blue-600 hover:text-blue-800 font-medium mt-0.5"
+                              >
+                                {event.metadata.contactPhone}
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Scheduled Notes */}
+                    {event.metadata?.scheduledNotes && (
+                      <div className="pt-2 border-t border-blue-200">
+                        <p className="text-xs text-blue-600 font-medium mb-1.5">Catatan Interview</p>
+                        <p className="text-sm text-blue-800 bg-blue-100/50 rounded p-2">{event.metadata.scheduledNotes}</p>
                       </div>
                     )}
                   </div>

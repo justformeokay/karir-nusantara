@@ -22,8 +22,21 @@ export interface TimelineEvent {
   application_id: number;
   status: ApplicationStatus;
   notes?: string;
+  note?: string; // Alternative field name from backend
   created_at: string;
   created_by?: string;
+  updated_by_type?: string;
+  
+  // Interview scheduling fields from backend
+  scheduled_at?: string;
+  scheduled_location?: string;
+  scheduled_notes?: string;
+  interview_type?: 'online' | 'offline' | 'whatsapp_notification';
+  meeting_link?: string;
+  meeting_platform?: string;
+  interview_address?: string;
+  contact_person?: string;
+  contact_phone?: string;
 }
 
 // Job info dalam application response (simplified)
