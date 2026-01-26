@@ -99,3 +99,34 @@ export {
   type ApplicantDocument,
   type UpdateProfileRequest,
 } from './profile';
+
+// Tickets API
+export {
+  checkCooldown,
+  createTicket,
+  getMyTickets,
+  getTicketDetail,
+  addTicketResponse,
+  getCategoryLabel as getTicketCategoryLabel,
+  getPriorityLabel as getTicketPriorityLabel,
+  getStatusLabel as getTicketStatusLabel,
+  formatCooldownTime,
+  type SupportTicket,
+  type TicketWithDetails,
+  type TicketResponse,
+  type CreateTicketRequest,
+  type AddResponseRequest,
+  type CooldownResponse,
+} from './tickets';
+
+// Password Reset API
+export {
+  forgotPassword,
+  verifyResetToken,
+  resetPassword,
+  type ForgotPasswordRequest,
+  type ResetPasswordRequest,
+  type VerifyTokenResponse,
+  type MessageResponse as PasswordResetMessageResponse,
+} from './passwordReset';
+

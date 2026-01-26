@@ -19,6 +19,13 @@ import ProfilePage from "@/pages/ProfilePage";
 import ApplicationTipsPage from "@/pages/ApplicationTipsPage";
 import RecommendedJobsPage from "@/pages/RecommendedJobsPage";
 import MyApplicationsPage from "@/pages/MyApplicationsPage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
+import FAQPage from "@/pages/FAQPage";
+import TermsAndConditionsPage from "@/pages/TermsAndConditionsPage";
+import BugReportingPage from "@/pages/BugReportingPage";
+import SupportTicketingPage from "@/pages/SupportTicketingPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -90,6 +97,13 @@ const App = () => (
                       <MyApplicationsPage />
                     </ProtectedRoute>
                   } />
+                  <Route path="/kebijakan-privasi" element={<PrivacyPolicyPage />} />
+                  <Route path="/faq" element={<FAQPage />} />
+                  <Route path="/syarat-ketentuan" element={<TermsAndConditionsPage />} />
+                  <Route path="/laporkan-bug" element={<BugReportingPage />} />
+                  <Route path="/dukungan" element={<SupportTicketingPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

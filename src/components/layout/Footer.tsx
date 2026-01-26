@@ -47,14 +47,14 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-background/70 hover:text-white transition-colors text-sm">
-                  Tips Karir
-                </a>
+                <Link to="/faq" className="text-background/70 hover:text-white transition-colors text-sm">
+                  FAQ
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-background/70 hover:text-white transition-colors text-sm">
-                  FAQ
-                </a>
+                <Link to="/laporkan-bug" className="text-background/70 hover:text-white transition-colors text-sm">
+                  Laporkan Bug
+                </Link>
               </li>
             </ul>
           </div>
@@ -86,21 +86,29 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Support */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Hubungi Kami</h3>
+            <h3 className="font-semibold text-lg mb-4">Dukungan</h3>
             <ul className="space-y-3">
-              <li className="flex items-center gap-3 text-background/70 text-sm">
-                <MapPin className="w-4 h-4 text-white" />
-                Sidoarjo, Indonesia
+              <li>
+                <Link to="/dukungan" className="text-background/70 hover:text-white transition-colors text-sm">
+                  Ticketing Support
+                </Link>
               </li>
-              <li className="flex items-center gap-3 text-background/70 text-sm">
-                <Mail className="w-4 h-4 text-white" />
-                halo@karirnusantara.id
+              <li>
+                <Link to="/laporkan-bug" className="text-background/70 hover:text-white transition-colors text-sm">
+                  Laporkan Bug
+                </Link>
               </li>
-              <li className="flex items-center gap-3 text-background/70 text-sm">
-                <Phone className="w-4 h-4 text-white" />
-                +62 21 1234 5678
+              <li>
+                <a href="mailto:halo@karirnusantara.id" className="text-background/70 hover:text-white transition-colors text-sm">
+                  Email Kami
+                </a>
+              </li>
+              <li>
+                <a href="https://wa.me/6221123456" target="_blank" rel="noopener noreferrer" className="text-background/70 hover:text-white transition-colors text-sm">
+                  WhatsApp
+                </a>
               </li>
             </ul>
           </div>
@@ -111,12 +119,12 @@ const Footer: React.FC = () => {
             © 2024 Karir Nusantara. Hak cipta dilindungi.
           </p>
           <div className="flex items-center gap-6">
-            <a href="#" className="text-background/50 hover:text-white text-sm transition-colors">
+            <Link to="/kebijakan-privasi" className="text-background/50 hover:text-white text-sm transition-colors">
               Kebijakan Privasi
-            </a>
-            <a href="#" className="text-background/50 hover:text-white text-sm transition-colors">
+            </Link>
+            <Link to="/syarat-ketentuan" className="text-background/50 hover:text-white text-sm transition-colors">
               Syarat & Ketentuan
-            </a>
+            </Link>
           </div>
         </div>
       </div>
