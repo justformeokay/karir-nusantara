@@ -9,6 +9,7 @@ import { jobCategories } from '@/data/jobs';
 import { listJobs, Job } from '@/api/jobs';
 import { useAppliedJobIds } from '@/hooks/useApplications';
 import { useAuth } from '@/contexts/AuthContext.new';
+import { AnnouncementBanner, NotificationsList, InformationSection } from '@/components/announcements/AnnouncementComponents';
 import heroImage from '@/assets/hero-image.png';
 
 const HomePage: React.FC = () => {
@@ -74,6 +75,9 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Announcement Banner */}
+      <AnnouncementBanner />
+
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-r from-slate-800 via-slate-700 to-teal-600">
         {/* Background Image */}
@@ -155,6 +159,16 @@ const HomePage: React.FC = () => {
                 <p className="text-sm text-primary-foreground/70">{stat.label}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Notifications and Information Section */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="space-y-6">
+            <NotificationsList />
+            <InformationSection />
           </div>
         </div>
       </section>
