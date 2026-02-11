@@ -252,7 +252,13 @@ const JobDetailPage: React.FC = () => {
               {/* Description */}
               <div className="bg-card border border-border rounded-xl p-6 md:p-8">
                 <h2 className="text-xl font-bold text-foreground mb-4">Deskripsi Pekerjaan</h2>
-                <p className="text-muted-foreground leading-relaxed">{job.description}</p>
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  {job.description.split('\n\n').map((paragraph, index) => (
+                    <p key={index} className="text-muted-foreground leading-relaxed whitespace-pre-wrap mb-4 last:mb-0">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
               </div>
 
               {/* Requirements */}
