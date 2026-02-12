@@ -69,6 +69,7 @@ export interface Job {
   salaryMax?: number;
   salaryCurrency: string;
   isSalaryVisible: boolean;
+  isSalaryFixed?: boolean;
   skills: string[];
   company: JobCompany;
   status: 'draft' | 'active' | 'paused' | 'closed' | 'filled';
@@ -125,6 +126,7 @@ function transformJob(apiJob: JobApiResponse): Job {
     salaryMax: apiJob.salary?.max,
     salaryCurrency: apiJob.salary?.currency || 'IDR',
     isSalaryVisible: !!apiJob.salary, // If salary object exists, it's visible
+    isSalaryFixed: !!(apiJob.salary && apiJob.salary.max === 0), // If max is 0, it's fixed salary
     skills: apiJob.skills || [],
     company: apiJob.company,
     status: apiJob.status,
