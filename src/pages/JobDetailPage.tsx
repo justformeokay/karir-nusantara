@@ -9,7 +9,6 @@ import {
   Wifi,
   Zap,
   Building2,
-  CheckCircle,
   Share2,
   Heart,
   Send,
@@ -252,27 +251,20 @@ const JobDetailPage: React.FC = () => {
               {/* Description */}
               <div className="bg-card border border-border rounded-xl p-6 md:p-8">
                 <h2 className="text-xl font-bold text-foreground mb-4">Deskripsi Pekerjaan</h2>
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  {job.description.split('\n\n').map((paragraph, index) => (
-                    <p key={index} className="text-muted-foreground leading-relaxed whitespace-pre-wrap mb-4 last:mb-0">
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
+                <div 
+                  className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: job.description }}
+                />
               </div>
 
               {/* Requirements */}
               {job.requirements && (
                 <div className="bg-card border border-border rounded-xl p-6 md:p-8">
                   <h2 className="text-xl font-bold text-foreground mb-4">Persyaratan</h2>
-                  <ul className="space-y-3">
-                    {job.requirements.split('\n').filter(Boolean).map((req, index) => (
-                      <li key={index} className="flex items-start gap-3 text-muted-foreground">
-                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                        {req}
-                      </li>
-                    ))}
-                  </ul>
+                  <div 
+                    className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-2"
+                    dangerouslySetInnerHTML={{ __html: job.requirements }}
+                  />
                 </div>
               )}
 
@@ -280,14 +272,10 @@ const JobDetailPage: React.FC = () => {
               {job.responsibilities && (
                 <div className="bg-card border border-border rounded-xl p-6 md:p-8">
                   <h2 className="text-xl font-bold text-foreground mb-4">Tanggung Jawab</h2>
-                  <ul className="space-y-3">
-                    {job.responsibilities.split('\n').filter(Boolean).map((resp, index) => (
-                      <li key={index} className="flex items-start gap-3 text-muted-foreground">
-                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                        {resp}
-                      </li>
-                    ))}
-                  </ul>
+                  <div 
+                    className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-2"
+                    dangerouslySetInnerHTML={{ __html: job.responsibilities }}
+                  />
                 </div>
               )}
 
@@ -296,11 +284,42 @@ const JobDetailPage: React.FC = () => {
                 <div className="bg-card border border-border rounded-xl p-6 md:p-8">
                   <h2 className="text-xl font-bold text-foreground mb-4">Benefit</h2>
                   <div className="flex flex-wrap gap-2">
-                    {job.benefits.split('\n').filter(Boolean).map((benefit, index) => (
-                      <Badge key={index} variant="secondary" className="text-sm py-2 px-4">
-                        {benefit}
-                      </Badge>
-                    ))}
+                    {(() => {
+                      // Try to extract from HTML list items first
+                      const listMatches = job.benefits.match(/<li[^>]*>([^<]+)<\/li>/gi);
+                      if (listMatches && listMatches.length > 0) {
+                        return listMatches
+                          .map(item => item.replace(/<\/?li[^>]*>/gi, '').trim())
+                          .filter(Boolean)
+                          .map((benefit, index) => (
+                            <div
+                              key={index}
+                              className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                            >
+                              <span className="font-bold">{index + 1}</span>
+                              <span>{benefit}</span>
+                            </div>
+                          ));
+                      }
+                      // Fallback: split by newline for plain text
+                      return job.benefits
+                        .replace(/<[^>]*>/g, '')
+                        .split('\n')
+                        .filter(Boolean)
+                        .filter(text => text.toLowerCase() !== 'benefit yang akan anda peroleh:' && text.toLowerCase() !== 'benefits yang akan anda peroleh:')
+                        .map((benefit, index) => {
+                          const cleanText = benefit.trim();
+                          return cleanText ? (
+                            <div
+                              key={index}
+                              className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                            >
+                              <span className="font-bold">{index + 1}</span>
+                              <span>{cleanText}</span>
+                            </div>
+                          ) : null;
+                        });
+                    })()}
                   </div>
                 </div>
               )}
