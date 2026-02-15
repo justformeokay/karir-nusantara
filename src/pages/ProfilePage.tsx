@@ -30,6 +30,9 @@ import {
   Linkedin,
   Globe,
   Building2,
+  Upload,
+  Eye,
+  File,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,9 +50,11 @@ import {
 import { useAuth } from '@/contexts/AuthContext.new';
 import { useApplications } from '@/contexts/ApplicationContext.new';
 import { useWishlist, useRemoveFromWishlist, useWishlistStats } from '@/hooks/useWishlist';
-import { useUploadAvatar } from '@/hooks/useProfile';
+import { useUploadAvatar, useDocuments } from '@/hooks/useProfile';
+import { uploadDocument, deleteDocument, ApplicantDocument } from '@/api/profile';
 import { STATIC_BASE_URL } from '@/api/config';
 import { toast } from 'sonner';
+import { calculateCVCompleteness, getCompletenessStatus } from '@/lib/cv-helper';
 import ExtendedProfileForm from '@/components/profile/ExtendedProfileForm';
 import { getCV, CVData } from '@/api/cv';
 import CVPDFGenerator from '@/components/cv/CVPDFGenerator';
@@ -77,6 +82,11 @@ const ProfilePage: React.FC = () => {
   const [cvData, setCvData] = useState<CVData | null>(null);
   const [cvLoading, setCvLoading] = useState(false);
   
+  // Document Management State
+  const { data: documents, isLoading: documentsLoading, refetch: refetchDocuments } = useDocuments(isAuthenticated);
+  const [uploadingCV, setUploadingCV] = useState(false);
+  const cvFileInputRef = useRef<HTMLInputElement>(null);
+  
   // Load CV data when CV tab is active
   useEffect(() => {
     if (activeTab === 'cv' && !cvData && !cvLoading) {
@@ -95,6 +105,96 @@ const ProfilePage: React.FC = () => {
       setCvLoading(false);
     }
   };
+
+  // Helper function to safely format dates
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) {
+      return 'Belum diperbarui';
+    }
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Belum diperbarui';
+      }
+      return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch (error) {
+      return 'Belum diperbarui';
+    }
+  };
+
+  // Format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  // Handle CV Upload
+  const handleCVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format file harus PDF, Word, JPG, atau PNG');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran file maksimal 5MB');
+      return;
+    }
+    
+    try {
+      setUploadingCV(true);
+      
+      // Get existing uploaded CVs
+      const existingCVs = documents?.filter(doc => doc.document_type === 'cv_uploaded') || [];
+      
+      // Delete existing uploaded CV if exists (ONLY allow 1 CV per user)
+      if (existingCVs.length > 0) {
+        for (const cv of existingCVs) {
+          await deleteDocument(cv.id);
+        }
+        console.log(`Deleted ${existingCVs.length} existing CV(s) before uploading new one`);
+      }
+      
+      // Upload new CV
+      const newDoc = await uploadDocument(file, 'cv_uploaded', {
+        description: 'CV yang diupload oleh user',
+        isPrimary: true,
+      });
+      
+      toast.success('CV berhasil diupload!');
+      refetchDocuments();
+    } catch (error) {
+      console.error('Failed to upload CV:', error);
+      toast.error('Gagal mengupload CV');
+    } finally {
+      setUploadingCV(false);
+      // Reset input
+      if (cvFileInputRef.current) {
+        cvFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Handle delete uploaded CV
+  const handleDeleteUploadedCV = async (docId: string | number) => {
+    try {
+      await deleteDocument(docId);
+      toast.success('CV berhasil dihapus');
+      refetchDocuments();
+    } catch (error) {
+      console.error('Failed to delete CV:', error);
+      toast.error('Gagal menghapus CV');
+    }
+  };
+
+  // Get uploaded CV documents
+  const uploadedCVs = documents?.filter(doc => doc.document_type === 'cv_uploaded') || [];
 
   // Get saved jobs from API
   const savedJobs = wishlistData?.items || [];
@@ -658,7 +758,7 @@ const ProfilePage: React.FC = () => {
                     <div>
                       <h3 className="text-xl font-bold text-foreground mb-1">CV Anda</h3>
                       <p className="text-sm text-muted-foreground">
-                        Terakhir diupdate: {new Date(cvData.updated_at || '').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        Terakhir diupdate: {formatDate(cvData.updated_at)}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -695,18 +795,23 @@ const ProfilePage: React.FC = () => {
                   {/* Completeness Score */}
                   <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-foreground">Kelengkapan CV</span>
-                      <span className="text-sm font-bold text-primary">{(cvData.completeness_score || cvData.completeness || 0)}%</span>
+                      <div>
+                        <span className="text-sm font-medium text-foreground mr-2">Kelengkapan CV</span>
+                        <Badge variant="outline" className={`${getCompletenessStatus(calculateCVCompleteness(cvData)).color} border-current`}>
+                          {getCompletenessStatus(calculateCVCompleteness(cvData)).label}
+                        </Badge>
+                      </div>
+                      <span className="text-sm font-bold text-primary">{calculateCVCompleteness(cvData)}%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                       <motion.div 
                         initial={{ width: 0 }}
-                        animate={{ width: `${(cvData.completeness_score || cvData.completeness || 0)}%` }}
+                        animate={{ width: `${calculateCVCompleteness(cvData)}%` }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
                         className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full"
                       />
                     </div>
-                    {(cvData.completeness_score || cvData.completeness || 0) < 100 && (
+                    {calculateCVCompleteness(cvData) < 100 && (
                       <p className="text-xs text-muted-foreground mt-2">
                         Lengkapi CV Anda untuk meningkatkan peluang diterima
                       </p>
@@ -957,6 +1062,120 @@ const ProfilePage: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Document Management - Upload CV */}
+                  <div className="border-t border-border pt-8">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Upload className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-semibold text-foreground">Dokumen</h4>
+                          <p className="text-sm text-muted-foreground">Upload CV dan dokumen pendukung lainnya</p>
+                        </div>
+                      </div>
+
+                      {/* Hidden file input */}
+                      <input
+                        type="file"
+                        ref={cvFileInputRef}
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
+                        onChange={handleCVUpload}
+                        className="hidden"
+                      />
+
+                      {/* Upload Area */}
+                      <div 
+                        className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                        onClick={() => cvFileInputRef.current?.click()}
+                      >
+                        {uploadingCV ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            <p className="text-sm text-muted-foreground">Mengupload CV...</p>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                            <p className="text-sm font-medium text-foreground mb-1">
+                              Klik untuk upload CV
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              PDF, DOC, DOCX, JPG, PNG (Max 10MB)
+                            </p>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Documents List */}
+                      {documentsLoading ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : uploadedCVs.length > 0 ? (
+                        <div className="space-y-3">
+                          {uploadedCVs.map((doc) => (
+                            <motion.div
+                              key={doc.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="bg-muted/50 border border-border rounded-lg p-4 flex items-center justify-between"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white border border-primary/20 rounded flex items-center justify-center">
+                                  <File className="w-5 h-5 text-primary" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-foreground truncate">
+                                    {doc.document_name || 'Dokumen'}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    {doc.file_size && (
+                                      <>
+                                        <span>{formatFileSize(doc.file_size)}</span>
+                                        <span>•</span>
+                                      </>
+                                    )}
+                                    <span className="text-green-600 flex items-center gap-1">
+                                      <CheckCircle className="w-3 h-3" /> Utama
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    const url = doc.document_url.startsWith('http')
+                                      ? doc.document_url
+                                      : `${STATIC_BASE_URL}${doc.document_url}`;
+                                    window.open(url, '_blank');
+                                  }}
+                                  className="gap-1"
+                                >
+                                  <Eye className="w-4 h-4" /> Lihat
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteUploadedCV(doc.id)}
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p className="text-sm">Belum ada CV yang diupload</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 /* No CV - Show CTA */

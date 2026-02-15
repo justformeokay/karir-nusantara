@@ -38,6 +38,7 @@ const JobDetailPage: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [selectedCVSource, setSelectedCVSource] = useState<'built' | 'uploaded' | null>(null);
   const hasTrackedView = useRef(false);
 
   // Fetch from API using id (supports hash_id)
@@ -126,7 +127,19 @@ const JobDetailPage: React.FC = () => {
 
     if (!job) return;
 
-    // Show confirmation dialog instead of immediately applying
+    // Determine CV selection logic
+    if (hasBuiltCV && hasUploadedCV) {
+      // User has both CVs - show selection dialog
+      setSelectedCVSource(null); // Reset selection
+    } else if (hasUploadedCV) {
+      // User only has uploaded CV
+      setSelectedCVSource('uploaded');
+    } else if (hasBuiltCV) {
+      // User only has built CV
+      setSelectedCVSource('built');
+    }
+
+    // Show confirmation dialog
     setIsConfirmDialogOpen(true);
   };
 
@@ -139,18 +152,34 @@ const JobDetailPage: React.FC = () => {
       return;
     }
 
+    // If user has both CVs, they must select one
+    if (hasBuiltCV && hasUploadedCV && !selectedCVSource) {
+      toast.error('Silakan pilih CV yang akan dikirim');
+      return;
+    }
+
     setIsApplying(true);
     try {
-      await applyToJob(String(job.id), {
-        id: String(job.id),
-        title: job.title,
-        company: job.company.name,
-        companyLogo: job.company.logo_url || '',
-        location: job.location,
-        type: getJobTypeLabel(job.jobType) as any,
-      });
+      const cvSource = selectedCVSource || (hasUploadedCV ? 'uploaded' : 'built');
+      const uploadedDocId = cvSource === 'uploaded' && uploadedCV ? uploadedCV.id : undefined;
+
+      await applyToJob(
+        String(job.id), 
+        {
+          id: String(job.id),
+          title: job.title,
+          company: job.company.name,
+          companyLogo: job.company.logo_url || '',
+          location: job.location,
+          type: getJobTypeLabel(job.jobType) as any,
+        },
+        undefined, // coverLetter
+        cvSource,
+        uploadedDocId
+      );
       toast.success('Lamaran berhasil dikirim!');
       setIsConfirmDialogOpen(false);
+      setSelectedCVSource(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Gagal mengirim lamaran';
       toast.error(message);
@@ -520,7 +549,7 @@ const JobDetailPage: React.FC = () => {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-card rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl"
+            className="bg-card rounded-2xl p-6 md:p-8 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl shadow-2xl max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-6">
@@ -528,11 +557,11 @@ const JobDetailPage: React.FC = () => {
                 <Send className="w-8 h-8 text-primary" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-2">Konfirmasi Lamaran</h2>
-              <p className="text-muted-foreground">Pastikan informasi di bawah sudah benar sebelum mengirim lamaran</p>
+              <p className="text-sm text-muted-foreground">Pastikan informasi di bawah sudah benar sebelum mengirim lamaran</p>
             </div>
 
-            {/* Job Details */}
-            <div className="bg-muted/50 rounded-lg p-4 mb-6 space-y-3">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto pr-2 mb-6 space-y-6">
               <div>
                 <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">Posisi</p>
                 <p className="font-bold text-foreground">{job.title}</p>
@@ -566,38 +595,37 @@ const JobDetailPage: React.FC = () => {
                   <p className="font-semibold text-primary">{formatSalaryRange(job.salaryMin, job.salaryMax)}</p>
                 </div>
               )}
-            </div>
 
-            {/* CV Status Check */}
-            {isCVCheckLoading ? (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center gap-3">
-                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-                <p className="text-sm text-blue-800">Memeriksa kelengkapan CV Anda...</p>
-              </div>
-            ) : !hasCVReady ? (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 text-red-600">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-red-800">CV Anda belum lengkap</p>
-                    <p className="text-xs mt-1 text-red-700">Anda harus mengupload atau membuat CV terlebih dahulu sebelum bisa melamar pekerjaan ini.</p>
-                  </div>
+              {/* CV Status Check */}
+              {isCVCheckLoading ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                  <p className="text-sm text-blue-800">Memeriksa kelengkapan CV Anda...</p>
                 </div>
-                <Link to="/cv" className="block mt-3" onClick={() => setIsConfirmDialogOpen(false)}>
-                  <Button variant="destructive" size="sm" className="w-full gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Buat CV Sekarang
-                  </Button>
-                </Link>
-              </div>
+              ) : !hasCVReady ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 text-red-600">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-red-800">CV Anda belum lengkap</p>
+                      <p className="text-xs mt-1 text-red-700">Anda harus mengupload atau membuat CV terlebih dahulu sebelum bisa melamar pekerjaan ini.</p>
+                    </div>
+                  </div>
+                  <Link to="/cv" className="block mt-3" onClick={() => setIsConfirmDialogOpen(false)}>
+                    <Button variant="destructive" size="sm" className="w-full gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Buat CV Sekarang
+                    </Button>
+                  </Link>
+                </div>
             ) : (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex gap-3">
                   <div className="flex-shrink-0 text-green-600">
                     <CheckCircle2 className="w-5 h-5" />
@@ -620,8 +648,60 @@ const JobDetailPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* CV Selection - Show only if user has both CVs */}
+                {hasBuiltCV && hasUploadedCV && (
+                  <div className="mt-4 pt-4 border-t border-green-200">
+                    <p className="text-xs font-semibold text-green-800 mb-3 uppercase tracking-wide">Pilih CV yang akan dikirim</p>
+                    <div className="space-y-2">
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedCVSource === 'uploaded' 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-green-300 bg-white hover:border-primary/50'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="cv-source"
+                          value="uploaded"
+                          checked={selectedCVSource === 'uploaded'}
+                          onChange={(e) => setSelectedCVSource(e.target.value as 'uploaded')}
+                          className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
+                        />
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Upload className="w-4 h-4 text-primary flex-shrink-0" />
+                          <div className="text-sm min-w-0">
+                            <p className="font-medium text-foreground">CV Upload</p>
+                            <p className="text-xs text-muted-foreground truncate">{uploadedCV?.document_name || 'CV Terupload'}</p>
+                          </div>
+                        </div>
+                      </label>
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedCVSource === 'built' 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-green-300 bg-white hover:border-primary/50'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="cv-source"
+                          value="built"
+                          checked={selectedCVSource === 'built'}
+                          onChange={(e) => setSelectedCVSource(e.target.value as 'built')}
+                          className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
+                        />
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <FileText className="w-4 h-4 text-primary flex-shrink-0" />
+                          <div className="text-sm min-w-0">
+                            <p className="font-medium text-foreground">CV dari Sistem</p>
+                            <p className="text-xs text-muted-foreground">CV yang dibuat di platform</p>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
+            </div>
 
             {/* Actions */}
             <div className="flex gap-3">

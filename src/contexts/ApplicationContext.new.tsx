@@ -106,7 +106,7 @@ interface ApplicationContextType {
   getActiveApplications: () => Application[];
   hasAppliedToJob: (jobId: string) => boolean;
   
-  applyToJob: (jobId: string, jobDetails: Application['job'], coverLetter?: string) => Promise<Application>;
+  applyToJob: (jobId: string, jobDetails: Application['job'], coverLetter?: string, cvSource?: 'built' | 'uploaded', uploadedDocumentId?: number) => Promise<Application>;
   withdrawApplication: (applicationId: string) => Promise<void>;
   refreshApplications: () => Promise<void>;
   clearError: () => void;
@@ -350,7 +350,9 @@ export function ApplicationProvider({ children }: ApplicationProviderProps) {
   const applyToJob = useCallback(async (
     jobId: string,
     jobDetails: Application['job'],
-    coverLetter?: string
+    coverLetter?: string,
+    cvSource?: 'built' | 'uploaded',
+    uploadedDocumentId?: number
   ): Promise<Application> => {
     // Check if already applied
     const existing = applications.find(app => app.jobId === jobId);
@@ -368,6 +370,8 @@ export function ApplicationProvider({ children }: ApplicationProviderProps) {
       const apiResponse = await apiApplyToJob({
         job_id: parseInt(jobId, 10),
         cover_letter: coverLetter,
+        cv_source: cvSource,
+        uploaded_document_id: uploadedDocumentId,
       });
 
       const now = new Date().toISOString();

@@ -98,6 +98,8 @@ export interface ApplicationListResponse {
 export interface ApplyRequest {
   job_id: number;
   cover_letter?: string;
+  cv_source?: 'built' | 'uploaded'; // CV source: from system builder or uploaded document
+  uploaded_document_id?: number;    // Required if cv_source='uploaded'
 }
 
 // ============================================

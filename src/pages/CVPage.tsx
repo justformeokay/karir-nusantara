@@ -55,6 +55,7 @@ import {
   Language,
 } from '@/api/cv';
 import CVPDFGenerator, { CVDataForPDF } from '@/components/cv/CVPDFGenerator';
+import { calculateCVCompleteness } from '@/lib/cv-helper';
 
 // ============================================
 // TYPES
@@ -595,16 +596,19 @@ const CVPage: React.FC = () => {
   };
 
   // Calculate completeness
+  // Uses standardized calculation from lib/cv-helper
   const calculateCompleteness = (): number => {
-    let score = 0;
-    if (personalInfo.full_name && personalInfo.email && personalInfo.phone) score += 20;
-    if (personalInfo.summary) score += 5;
-    if (education.length > 0) score += 20;
-    if (experience.length > 0) score += 25;
-    if (skills.length >= 3) score += 15;
-    if (certifications.length > 0) score += 10;
-    if (languages.length > 0) score += 5;
-    return Math.min(100, score);
+    // Construct a temporary CVData object to use the helper function
+    const tempCV: any = {
+      personal_info: personalInfo,
+      education: education,
+      experience: experience,
+      skills: skills,
+      certifications: certifications,
+      languages: languages
+    };
+    
+    return calculateCVCompleteness(tempCV);
   };
 
   // Add handlers
