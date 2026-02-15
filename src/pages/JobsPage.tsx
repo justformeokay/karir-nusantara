@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Briefcase, SearchX, Loader2, Plus } from 'lucide-react';
+import { Briefcase, SearchX, Loader2, Plus, Building2, X } from 'lucide-react';
 import SearchBar from '@/components/jobs/SearchBar';
 import JobFilters from '@/components/jobs/JobFilters';
 import JobCard from '@/components/jobs/JobCard';
@@ -10,6 +10,7 @@ import { useInfiniteJobs } from '@/hooks/useJobs';
 import { useAppliedJobIds } from '@/hooks/useApplications';
 import { useAuth } from '@/contexts/AuthContext.new';
 import { type Job as ApiJob } from '@/api/jobs';
+import { getCompanyByHashId, type Company } from '@/api/companies';
 
 // Map frontend job types to backend API format
 const JOB_TYPE_MAP: Record<string, string> = {
@@ -34,12 +35,32 @@ const JobsPage: React.FC = () => {
     type: 'all',
     salaryRange: '0',
   });
+  const [filteredCompany, setFilteredCompany] = useState<Company | null>(null);
 
   // Check if user is authenticated
   const { isAuthenticated } = useAuth();
 
   // Fetch applied job IDs for logged-in users
   const { hasApplied } = useAppliedJobIds();
+
+  // Fetch company info if filtering by company
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      if (companyHashId) {
+        try {
+          const company = await getCompanyByHashId(companyHashId);
+          setFilteredCompany(company);
+        } catch (error) {
+          console.error('Failed to fetch company info:', error);
+          setFilteredCompany(null);
+        }
+      } else {
+        setFilteredCompany(null);
+      }
+    };
+    
+    fetchCompanyInfo();
+  }, [companyHashId]);
 
   // Debounce keyword for API calls
   useEffect(() => {
@@ -203,6 +224,54 @@ const JobsPage: React.FC = () => {
             onSearch={(kw) => handleSearch(kw)}
           />
         </motion.div>
+
+        {/* Company Filter Badge */}
+        {filteredCompany && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-6"
+          >
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0">
+                  {filteredCompany.logoUrl ? (
+                    <img
+                      src={filteredCompany.logoUrl}
+                      alt={filteredCompany.name}
+                      className="w-12 h-12 rounded-lg object-cover bg-white"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-primary" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Menampilkan lowongan dari</p>
+                  <Link 
+                    to={`/perusahaan/${filteredCompany.hashId}`}
+                    className="font-semibold text-foreground hover:text-primary transition-colors"
+                  >
+                    {filteredCompany.name}
+                  </Link>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.delete('company');
+                  setSearchParams(params);
+                }}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title="Hapus filter perusahaan"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Filters */}
         <motion.div

@@ -159,6 +159,7 @@ export async function listJobs(params: JobListParams = {}): Promise<JobListRespo
   if (params.is_remote !== undefined) searchParams.append('is_remote', String(params.is_remote));
   if (params.salary_min) searchParams.append('salary_min', String(params.salary_min));
   if (params.salary_max) searchParams.append('salary_max', String(params.salary_max));
+  if (params.company) searchParams.append('company', params.company); // Filter by company hash_id
   if (params.sort_by) searchParams.append('sort_by', params.sort_by);
   if (params.sort_order) searchParams.append('sort_order', params.sort_order);
 
