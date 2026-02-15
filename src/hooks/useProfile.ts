@@ -103,12 +103,14 @@ export function useUploadAvatar() {
 
 /**
  * Hook to fetch all documents
+ * @param enabled - Whether to fetch documents (default: true)
  */
-export function useDocuments() {
+export function useDocuments(enabled: boolean = true) {
   return useQuery<ApplicantDocument[]>({
     queryKey: profileKeys.documents(),
     queryFn: getDocuments,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: enabled,
   });
 }
 

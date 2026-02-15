@@ -14,6 +14,8 @@ import {
   Send,
   Loader2,
   CheckCircle2,
+  Upload,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +26,8 @@ import { useToggleWishlist } from '@/hooks/useWishlist';
 import AuthModal from '@/components/auth/AuthModal';
 import { toast } from 'sonner';
 import { useJob } from '@/hooks/useJobs';
+import { useCV } from '@/hooks/useCV';
+import { useDocuments } from '@/hooks/useProfile';
 import { getJobTypeLabel, trackJobView, trackJobShare, type Job } from '@/api/jobs';
 
 const JobDetailPage: React.FC = () => {
@@ -41,6 +45,27 @@ const JobDetailPage: React.FC = () => {
 
   // Wishlist toggle hook
   const { isSaved, isLoading: isWishlistLoading, toggle: toggleWishlist } = useToggleWishlist(id || '');
+
+  // CV hooks - only fetch when user is authenticated
+  const { data: userCV, isLoading: isCVLoading } = useCV(isAuthenticated);
+  const { data: documents, isLoading: isDocsLoading } = useDocuments(isAuthenticated);
+  
+  // Check for uploaded CV
+  const uploadedCV = useMemo(() => {
+    if (!documents) return null;
+    return documents.find(doc => doc.document_type === 'cv_uploaded');
+  }, [documents]);
+  
+  // Check if CV is valid (has at least personal info filled OR has uploaded CV)
+  // Only check if user is authenticated
+  const hasBuiltCV = isAuthenticated && userCV && 
+    userCV.personalInfo?.fullName && 
+    userCV.personalInfo?.email && 
+    (userCV.personalInfo?.phone || userCV.education?.length > 0 || userCV.workExperience?.length > 0);
+  
+  const hasUploadedCV = isAuthenticated && !!uploadedCV;
+  const hasCVReady = hasBuiltCV || hasUploadedCV;
+  const isCVCheckLoading = isCVLoading || isDocsLoading;
 
   // Use API job directly
   const job = apiJob;
@@ -107,6 +132,12 @@ const JobDetailPage: React.FC = () => {
 
   const handleConfirmApply = async () => {
     if (!job) return;
+
+    // Validate CV before applying
+    if (!hasCVReady) {
+      toast.error('Anda harus melengkapi CV terlebih dahulu sebelum melamar');
+      return;
+    }
 
     setIsApplying(true);
     try {
@@ -357,7 +388,7 @@ const JobDetailPage: React.FC = () => {
                 }`}>
                   <Button 
                     onClick={handleApply} 
-                    disabled={isJobInactive || isApplying || hasAlreadyApplied}
+                    disabled={isJobInactive || isApplying || hasAlreadyApplied || (isAuthenticated && isCVCheckLoading)}
                     className={`w-full mb-4 ${
                       hasAlreadyApplied ? 'bg-green-600 hover:bg-green-600 cursor-not-allowed' : ''
                     }`}
@@ -462,9 +493,9 @@ const JobDetailPage: React.FC = () => {
                     Belum punya CV?
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Buat CV profesional gratis dengan CV Builder kami
+                    Upload CV atau buat CV profesional gratis dengan sistem kami
                   </p>
-                  <Link to="/buat-cv">
+                  <Link to="/cv">
                     <Button variant="default" className="w-full">
                       Buat CV Sekarang
                     </Button>
@@ -537,18 +568,60 @@ const JobDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* Warning Message */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6 flex gap-3">
-              <div className="flex-shrink-0 text-yellow-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
+            {/* CV Status Check */}
+            {isCVCheckLoading ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center gap-3">
+                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                <p className="text-sm text-blue-800">Memeriksa kelengkapan CV Anda...</p>
               </div>
-              <div className="text-sm text-yellow-800">
-                <p className="font-semibold">Pastikan CV Anda sudah lengkap dan terbaru</p>
-                <p className="text-xs mt-1 opacity-90">Lamaran Anda akan dikirim dengan CV yang terdaftar di akun kami</p>
+            ) : !hasCVReady ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 text-red-600">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-red-800">CV Anda belum lengkap</p>
+                    <p className="text-xs mt-1 text-red-700">Anda harus mengupload atau membuat CV terlebih dahulu sebelum bisa melamar pekerjaan ini.</p>
+                  </div>
+                </div>
+                <Link to="/cv" className="block mt-3" onClick={() => setIsConfirmDialogOpen(false)}>
+                  <Button variant="destructive" size="sm" className="w-full gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Buat CV Sekarang
+                  </Button>
+                </Link>
               </div>
-            </div>
+            ) : (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 text-green-600">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-green-800">CV Anda siap digunakan</p>
+                    <div className="text-xs mt-2 space-y-1.5 text-green-700">
+                      {hasUploadedCV && (
+                        <div className="flex items-center gap-2">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>CV Upload: {uploadedCV?.document_name || 'Tersedia'}</span>
+                        </div>
+                      )}
+                      {hasBuiltCV && (
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>CV dari Sistem Karir Nusantara</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3">
@@ -562,8 +635,9 @@ const JobDetailPage: React.FC = () => {
               </Button>
               <Button
                 onClick={handleConfirmApply}
-                disabled={isApplying}
+                disabled={isApplying || isCVCheckLoading || !hasCVReady}
                 className="flex-1 gap-2"
+                title={!hasCVReady ? 'Lengkapi CV terlebih dahulu' : ''}
               >
                 {isApplying ? (
                   <>

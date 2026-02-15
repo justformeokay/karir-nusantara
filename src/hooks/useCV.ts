@@ -25,8 +25,9 @@ export const cvKeys = {
 
 /**
  * Hook to fetch user's CV
+ * @param enabled - Whether to fetch CV data (default: true)
  */
-export function useCV() {
+export function useCV(enabled: boolean = true) {
   return useQuery({
     queryKey: cvKeys.detail(),
     queryFn: async () => {
@@ -38,6 +39,7 @@ export function useCV() {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
+    enabled: enabled,
   });
 }
 

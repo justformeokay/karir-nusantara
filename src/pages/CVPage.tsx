@@ -24,6 +24,8 @@ import {
   XCircle,
   Camera,
   Upload,
+  File,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +40,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext.new';
-import { getProfile, updateProfile, ApplicantProfile, uploadAvatar } from '@/api/profile';
+import { getProfile, updateProfile, ApplicantProfile, uploadAvatar, getDocuments, uploadDocument, deleteDocument, ApplicantDocument } from '@/api/profile';
 import { STATIC_BASE_URL } from '@/api/config';
 import {
   getCV,
@@ -59,6 +61,7 @@ import CVPDFGenerator, { CVDataForPDF } from '@/components/cv/CVPDFGenerator';
 // ============================================
 
 type Step = 'personal' | 'education' | 'experience' | 'skills' | 'certifications' | 'languages';
+type CVMode = 'upload' | 'builder' | null;
 
 interface StepConfig {
   id: Step;
@@ -90,6 +93,12 @@ const CVPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [hasCV, setHasCV] = useState(false);
+  
+  // CV Mode and Upload States
+  const [cvMode, setCvMode] = useState<CVMode>(null);
+  const [uploadedCV, setUploadedCV] = useState<ApplicantDocument | null>(null);
+  const [uploadingCV, setUploadingCV] = useState(false);
+  const cvFileInputRef = useRef<HTMLInputElement>(null);
   
   // CV Data States
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
@@ -135,11 +144,20 @@ const CVPage: React.FC = () => {
       setLoading(true);
       console.log('🔄 Loading CV data...');
       
-      // Load both CV and Profile data in parallel
-      const [cv, profile] = await Promise.all([
+      // Load CV, Profile, and Documents data in parallel
+      const [cv, profile, documents] = await Promise.all([
         getCV().catch(() => null),
         getProfile().catch(() => null),
+        getDocuments().catch(() => []),
       ]);
+      
+      // Check for uploaded CV document
+      const uploadedCVDoc = documents.find(doc => doc.document_type === 'cv_uploaded');
+      if (uploadedCVDoc) {
+        setUploadedCV(uploadedCVDoc);
+        setCvMode('upload');
+        console.log('✅ Found uploaded CV:', uploadedCVDoc);
+      }
       
       // Merge data from both sources
       // Priority: CV data first, then Profile data as fallback
@@ -169,6 +187,10 @@ const CVPage: React.FC = () => {
       
       if (cv) {
         setHasCV(true);
+        // If no uploaded CV, set builder mode
+        if (!uploadedCVDoc) {
+          setCvMode('builder');
+        }
         setEducation(cv.education || []);
         setExperience(cv.experience || []);
         setSkills(cv.skills || []);
@@ -183,6 +205,75 @@ const CVPage: React.FC = () => {
       setLoading(false);
       console.log('🏁 Loading complete');
     }
+  };
+  
+  // Handle CV file upload
+  const handleCVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format file harus PDF atau Word (DOC/DOCX)');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran file maksimal 5MB');
+      return;
+    }
+    
+    try {
+      setUploadingCV(true);
+      
+      // Delete existing uploaded CV if exists
+      if (uploadedCV) {
+        await deleteDocument(uploadedCV.id);
+      }
+      
+      // Upload new CV
+      const newDoc = await uploadDocument(file, 'cv_uploaded', {
+        description: 'CV yang diupload oleh user',
+        isPrimary: true,
+      });
+      
+      setUploadedCV(newDoc);
+      setCvMode('upload');
+      toast.success('CV berhasil diupload!');
+    } catch (error) {
+      console.error('Failed to upload CV:', error);
+      toast.error('Gagal mengupload CV');
+    } finally {
+      setUploadingCV(false);
+      // Reset input
+      if (cvFileInputRef.current) {
+        cvFileInputRef.current.value = '';
+      }
+    }
+  };
+  
+  // Handle delete uploaded CV
+  const handleDeleteUploadedCV = async () => {
+    if (!uploadedCV) return;
+    
+    try {
+      await deleteDocument(uploadedCV.id);
+      setUploadedCV(null);
+      setCvMode(hasCV ? 'builder' : null);
+      toast.success('CV berhasil dihapus');
+    } catch (error) {
+      console.error('Failed to delete CV:', error);
+      toast.error('Gagal menghapus CV');
+    }
+  };
+  
+  // Format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   const handleSave = async () => {
@@ -1261,6 +1352,284 @@ const CVPage: React.FC = () => {
 
   const completeness = calculateCompleteness();
 
+  // Render CV Upload Section
+  const renderCVUploadSection = () => (
+    <div className="bg-card border border-border rounded-xl p-6 mb-8">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+          <Upload className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-foreground">Upload CV Anda</h3>
+          <p className="text-sm text-muted-foreground">
+            Upload file CV dalam format PDF atau Word (max 5MB)
+          </p>
+        </div>
+      </div>
+      
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={cvFileInputRef}
+        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        onChange={handleCVUpload}
+        className="hidden"
+      />
+      
+      {uploadedCV ? (
+        // Show uploaded CV
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white border border-green-200 rounded-lg flex items-center justify-center">
+                <File className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">{uploadedCV.document_name || 'CV Terupload'}</p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {uploadedCV.file_size && (
+                    <span>{formatFileSize(uploadedCV.file_size)}</span>
+                  )}
+                  <span>•</span>
+                  <span className="text-green-600 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Terupload
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const url = uploadedCV.document_url.startsWith('http')
+                    ? uploadedCV.document_url
+                    : `${STATIC_BASE_URL}${uploadedCV.document_url}`;
+                  window.open(url, '_blank');
+                }}
+                className="gap-1"
+              >
+                <Eye className="w-4 h-4" /> Lihat
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => cvFileInputRef.current?.click()}
+                disabled={uploadingCV}
+              >
+                {uploadingCV ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  'Ganti'
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDeleteUploadedCV}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Upload button
+        <div 
+          className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+          onClick={() => cvFileInputRef.current?.click()}
+        >
+          {uploadingCV ? (
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Mengupload CV...</p>
+            </div>
+          ) : (
+            <>
+              <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-sm font-medium text-foreground mb-1">
+                Klik untuk upload atau drag & drop
+              </p>
+              <p className="text-xs text-muted-foreground">
+                PDF, DOC, DOCX (max 5MB)
+              </p>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  // Render CV Mode Selection (when no CV exists)
+  const renderCVModeSelection = () => (
+    <div className="container mx-auto px-4 py-12 pb-40">
+      <div className="max-w-3xl mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Pilih Metode CV Anda</h2>
+          <p className="text-muted-foreground">
+            Anda dapat mengupload CV yang sudah ada atau membuat CV baru menggunakan sistem kami
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Upload CV Option */}
+          <div 
+            className="bg-card border-2 border-border rounded-xl p-6 hover:border-primary/50 transition-all cursor-pointer group"
+            onClick={() => setCvMode('upload')}
+          >
+            <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+              <Upload className="w-7 h-7 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Upload CV</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Upload file CV yang sudah Anda miliki dalam format PDF atau Word
+            </p>
+            <ul className="text-sm text-muted-foreground space-y-1.5">
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Proses cepat & mudah</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Gunakan CV yang sudah ada</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Format PDF atau Word</span>
+              </li>
+            </ul>
+            <Button className="w-full mt-6 gap-2" variant="outline">
+              <Upload className="w-4 h-4" /> Upload CV
+            </Button>
+          </div>
+          
+          {/* CV Builder Option */}
+          <div 
+            className="bg-card border-2 border-border rounded-xl p-6 hover:border-primary/50 transition-all cursor-pointer group"
+            onClick={() => setCvMode('builder')}
+          >
+            <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+              <FileText className="w-7 h-7 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Buat CV dengan Sistem</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Buat CV profesional dengan panduan langkah demi langkah dari sistem kami
+            </p>
+            <ul className="text-sm text-muted-foreground space-y-1.5">
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Template profesional</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Panduan step-by-step</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Download sebagai PDF</span>
+              </li>
+            </ul>
+            <Button className="w-full mt-6 gap-2">
+              <Sparkles className="w-4 h-4" /> Buat CV
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // If no CV mode selected and no existing CV, show mode selection
+  if (!cvMode && !hasCV && !uploadedCV) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent py-8 md:py-12">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="w-6 h-6 text-primary" />
+              <Badge variant="secondary">CV</Badge>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+              Buat CV Anda
+            </h1>
+            <p className="text-muted-foreground">
+              Pilih metode yang paling sesuai untuk membuat CV Anda
+            </p>
+          </div>
+        </div>
+        {renderCVModeSelection()}
+      </div>
+    );
+  }
+
+  // If upload mode is selected, show upload section first
+  if (cvMode === 'upload' && !hasCV) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent py-8 md:py-12">
+          <div className="container mx-auto px-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setCvMode(null)}
+              className="mb-4 -ml-2"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" /> Kembali
+            </Button>
+            <div className="flex items-center gap-2 mb-2">
+              <Upload className="w-6 h-6 text-primary" />
+              <Badge variant="secondary">Upload CV</Badge>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+              Upload CV Anda
+            </h1>
+            <p className="text-muted-foreground">
+              Upload file CV yang sudah Anda miliki
+            </p>
+          </div>
+        </div>
+        
+        <div className="container mx-auto px-4 py-12 pb-40">
+          <div className="max-w-xl mx-auto">
+            {renderCVUploadSection()}
+            
+            {uploadedCV && (
+              <div className="mt-6 text-center">
+                <p className="text-sm text-muted-foreground mb-4">
+                  CV Anda sudah siap digunakan untuk melamar pekerjaan!
+                </p>
+                <div className="flex justify-center gap-3">
+                  <Link to="/lowongan">
+                    <Button className="gap-2">
+                      <ExternalLink className="w-4 h-4" /> Cari Lowongan
+                    </Button>
+                  </Link>
+                  <Button variant="outline" onClick={() => setCvMode('builder')}>
+                    <Sparkles className="w-4 h-4 mr-2" /> Buat CV Tambahan
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            <div className="mt-8 p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground text-center">
+                Ingin membuat CV dengan panduan sistem kami?{' '}
+                <button 
+                  onClick={() => setCvMode('builder')}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Buat CV dengan Sistem
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -1313,6 +1682,9 @@ const CVPage: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-4 py-12 pb-40">
+        {/* Show uploaded CV section if exists */}
+        {(uploadedCV || cvMode === 'upload') && renderCVUploadSection()}
+        
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Step Navigation */}
           <div className="lg:col-span-1">
