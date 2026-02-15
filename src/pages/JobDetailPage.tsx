@@ -13,6 +13,7 @@ import {
   Heart,
   Send,
   Loader2,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ const JobDetailPage: React.FC = () => {
   const { applyToJob, hasAppliedToJob } = useApplications();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const hasTrackedView = useRef(false);
 
   // Fetch from API using id (supports hash_id)
@@ -99,6 +101,13 @@ const JobDetailPage: React.FC = () => {
 
     if (!job) return;
 
+    // Show confirmation dialog instead of immediately applying
+    setIsConfirmDialogOpen(true);
+  };
+
+  const handleConfirmApply = async () => {
+    if (!job) return;
+
     setIsApplying(true);
     try {
       await applyToJob(String(job.id), {
@@ -110,6 +119,7 @@ const JobDetailPage: React.FC = () => {
         type: getJobTypeLabel(job.jobType) as any,
       });
       toast.success('Lamaran berhasil dikirim!');
+      setIsConfirmDialogOpen(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Gagal mengirim lamaran';
       toast.error(message);
@@ -347,28 +357,56 @@ const JobDetailPage: React.FC = () => {
                 }`}>
                   <Button 
                     onClick={handleApply} 
-                    disabled={isJobInactive || isApplying}
-                    className="w-full mb-4" 
+                    disabled={isJobInactive || isApplying || hasAlreadyApplied}
+                    className={`w-full mb-4 ${
+                      hasAlreadyApplied ? 'bg-green-600 hover:bg-green-600 cursor-not-allowed' : ''
+                    }`}
                     size="lg"
-                    title={isJobInactive ? 'Lowongan ini sudah ditutup' : ''}
+                    title={
+                      isJobInactive 
+                        ? 'Lowongan ini sudah ditutup' 
+                        : hasAlreadyApplied 
+                        ? 'Anda sudah melamar lowongan ini' 
+                        : ''
+                    }
                   >
-                    <Send className="w-5 h-5 mr-2" />
-                    Lamar Pekerjaan
+                    {hasAlreadyApplied ? (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 mr-2" />
+                        Sudah Dilamar
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5 mr-2" />
+                        Lamar Pekerjaan
+                      </>
+                    )}
                   </Button>
                   {isJobInactive && (
                     <p className="text-xs text-red-600 font-medium mb-3 text-center">
                       Lowongan ini sudah {job?.status === 'closed' ? 'ditutup' : 'tidak aktif'}
                     </p>
                   )}
+                  {hasAlreadyApplied && !isJobInactive && (
+                    <p className="text-xs text-green-600 font-medium mb-3 text-center">
+                      Lamaran Anda sudah terkirim
+                    </p>
+                  )}
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
                       onClick={handleSave}
-                      disabled={isWishlistLoading || isJobInactive}
+                      disabled={isWishlistLoading || isJobInactive || hasAlreadyApplied}
                       className={`flex-1 ${
-                        isJobInactive ? 'opacity-50 cursor-not-allowed' : ''
+                        isJobInactive || hasAlreadyApplied ? 'opacity-50 cursor-not-allowed' : ''
                       } ${isSaved ? 'text-destructive border-destructive' : ''}`}
-                      title={isJobInactive ? 'Tidak bisa menyimpan lowongan yang ditutup' : ''}
+                      title={
+                        isJobInactive 
+                          ? 'Tidak bisa menyimpan lowongan yang ditutup' 
+                          : hasAlreadyApplied
+                          ? 'Tidak perlu menyimpan, Anda sudah melamar'
+                          : ''
+                      }
                     >
                       {isWishlistLoading ? (
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -437,6 +475,112 @@ const JobDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {isConfirmDialogOpen && job && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => !isApplying && setIsConfirmDialogOpen(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-card rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Send className="w-8 h-8 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Konfirmasi Lamaran</h2>
+              <p className="text-muted-foreground">Pastikan informasi di bawah sudah benar sebelum mengirim lamaran</p>
+            </div>
+
+            {/* Job Details */}
+            <div className="bg-muted/50 rounded-lg p-4 mb-6 space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">Posisi</p>
+                <p className="font-bold text-foreground">{job.title}</p>
+              </div>
+              <div className="pt-3 border-t border-border">
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">Perusahaan</p>
+                <p className="font-semibold text-foreground flex items-center gap-2">
+                  {job.company.logo_url && (
+                    <img 
+                      src={`http://localhost:8081${job.company.logo_url}`}
+                      alt={job.company.name}
+                      className="w-5 h-5 rounded object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company.name)}&size=20`;
+                      }}
+                    />
+                  )}
+                  {job.company.name}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-border">
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">Lokasi & Tipe</p>
+                <p className="text-sm text-foreground">
+                  {job.location} • {getJobTypeLabel(job.jobType)}
+                  {job.isRemote && ' • Remote'}
+                </p>
+              </div>
+              {job.isSalaryVisible && (
+                <div className="pt-3 border-t border-border">
+                  <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">Gaji</p>
+                  <p className="font-semibold text-primary">{formatSalaryRange(job.salaryMin, job.salaryMax)}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Warning Message */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6 flex gap-3">
+              <div className="flex-shrink-0 text-yellow-600">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="text-sm text-yellow-800">
+                <p className="font-semibold">Pastikan CV Anda sudah lengkap dan terbaru</p>
+                <p className="text-xs mt-1 opacity-90">Lamaran Anda akan dikirim dengan CV yang terdaftar di akun kami</p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setIsConfirmDialogOpen(false)}
+                disabled={isApplying}
+                className="flex-1"
+              >
+                Batal
+              </Button>
+              <Button
+                onClick={handleConfirmApply}
+                disabled={isApplying}
+                className="flex-1 gap-2"
+              >
+                {isApplying ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Mengirim...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Kirim Lamaran
+                  </>
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
