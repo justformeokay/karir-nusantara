@@ -103,6 +103,7 @@ const JobsPage: React.FC = () => {
     salary_min: salaryRange.min,
     salary_max: salaryRange.max,
     company: companyHashId, // Filter by company if provided in URL
+    status: companyHashId ? 'all' : undefined, // Show all statuses when filtering by company
   });
 
   // Flatten all pages into a single array of jobs

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Briefcase, Zap, Wifi, CheckCircle2 } from 'lucide-react';
+import { MapPin, Clock, Briefcase, Zap, Wifi, CheckCircle2, XCircle, PauseCircle, CheckCheck } from 'lucide-react';
 import { Job as ApiJob } from '@/api/jobs';
 import { Badge } from '@/components/ui/badge';
 
@@ -55,11 +55,46 @@ const formatJobType = (jobType: string): string => {
   return types[jobType] || jobType;
 };
 
+// Get status badge config
+const getStatusConfig = (status: string) => {
+  const configs: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
+    'active': {
+      label: 'Aktif',
+      className: 'bg-green-100 text-green-700 border-green-200',
+      icon: <CheckCircle2 className="w-3 h-3" />
+    },
+    'paused': {
+      label: 'Dijeda',
+      className: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      icon: <PauseCircle className="w-3 h-3" />
+    },
+    'closed': {
+      label: 'Ditutup',
+      className: 'bg-gray-100 text-gray-700 border-gray-200',
+      icon: <XCircle className="w-3 h-3" />
+    },
+    'filled': {
+      label: 'Terisi',
+      className: 'bg-blue-100 text-blue-700 border-blue-200',
+      icon: <CheckCheck className="w-3 h-3" />
+    },
+    'draft': {
+      label: 'Draft',
+      className: 'bg-gray-100 text-gray-600 border-gray-200',
+      icon: null
+    }
+  };
+  return configs[status] || configs.draft;
+};
+
 const JobCard: React.FC<JobCardProps> = ({ job, index = 0, isApplied = false }) => {
   const companyName = job.company?.name || 'Unknown Company';
   const companyLogoUrl = job.company?.logo_url 
     ? `http://localhost:8081${job.company.logo_url}` 
     : `https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&background=667eea&color=fff&size=128`;
+  
+  const statusConfig = getStatusConfig(job.status);
+  const isInactive = job.status !== 'active';
 
   return (
     <motion.div
@@ -68,12 +103,22 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, isApplied = false }) 
       transition={{ duration: 0.4, delay: index * 0.1 }}
     >
       <Link to={`/lowongan/${job.hashId || job.id}`}>
-        <div className={`group bg-card border rounded-xl p-5 hover:shadow-card-hover transition-all duration-300 hover:border-primary/30 ${isApplied ? 'border-green-300 bg-green-50/30' : 'border-border'}`}>
-          {/* Applied Badge */}
-          {isApplied && (
-            <div className="flex items-center gap-1.5 text-green-600 mb-3 -mt-1">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-xs font-medium">Sudah Dilamar</span>
+        <div className={`group bg-card border rounded-xl p-5 hover:shadow-card-hover transition-all duration-300 hover:border-primary/30 ${isApplied ? 'border-green-300 bg-green-50/30' : isInactive ? 'border-gray-300 bg-gray-50/30' : 'border-border'}`}>
+          {/* Status Badges */}
+          {(isApplied || isInactive) && (
+            <div className="flex items-center gap-2 mb-3 -mt-1 flex-wrap">
+              {isApplied && (
+                <div className="flex items-center gap-1.5 text-green-600">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span className="text-xs font-medium">Sudah Dilamar</span>
+                </div>
+              )}
+              {isInactive && (
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${statusConfig.className}`}>
+                  {statusConfig.icon}
+                  <span>{statusConfig.label}</span>
+                </div>
+              )}
             </div>
           )}
           <div className="flex gap-4">

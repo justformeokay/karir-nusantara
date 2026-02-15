@@ -82,6 +82,11 @@ const JobDetailPage: React.FC = () => {
   }
 
   const handleApply = async () => {
+    if (job && job.status !== 'active') {
+      toast.error('Lowongan ini sudah ditutup, tidak bisa membuat lamaran baru');
+      return;
+    }
+
     if (!isAuthenticated) {
       setIsAuthModalOpen(true);
       return;
@@ -157,6 +162,9 @@ const JobDetailPage: React.FC = () => {
       trackJobShare(id, platform);
     }
   };
+
+  // Check if job is closed or inactive
+  const isJobInactive = job && job.status !== 'active';
 
   return (
     <>
@@ -334,17 +342,33 @@ const JobDetailPage: React.FC = () => {
             >
               {/* Apply Card - Sticky */}
               <div className="sticky top-24 space-y-6">
-                <div className="bg-card border border-border rounded-xl p-6">
-                  <Button onClick={handleApply} className="w-full mb-4" size="lg">
+                <div className={`bg-card border rounded-xl p-6 ${
+                  isJobInactive ? 'border-gray-200 opacity-60' : 'border-border'
+                }`}>
+                  <Button 
+                    onClick={handleApply} 
+                    disabled={isJobInactive || isApplying}
+                    className="w-full mb-4" 
+                    size="lg"
+                    title={isJobInactive ? 'Lowongan ini sudah ditutup' : ''}
+                  >
                     <Send className="w-5 h-5 mr-2" />
                     Lamar Pekerjaan
                   </Button>
+                  {isJobInactive && (
+                    <p className="text-xs text-red-600 font-medium mb-3 text-center">
+                      Lowongan ini sudah {job?.status === 'closed' ? 'ditutup' : 'tidak aktif'}
+                    </p>
+                  )}
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
                       onClick={handleSave}
-                      disabled={isWishlistLoading}
-                      className={`flex-1 ${isSaved ? 'text-destructive border-destructive' : ''}`}
+                      disabled={isWishlistLoading || isJobInactive}
+                      className={`flex-1 ${
+                        isJobInactive ? 'opacity-50 cursor-not-allowed' : ''
+                      } ${isSaved ? 'text-destructive border-destructive' : ''}`}
+                      title={isJobInactive ? 'Tidak bisa menyimpan lowongan yang ditutup' : ''}
                     >
                       {isWishlistLoading ? (
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -353,7 +377,15 @@ const JobDetailPage: React.FC = () => {
                       )}
                       {isSaved ? 'Tersimpan' : 'Simpan'}
                     </Button>
-                    <Button variant="outline" onClick={handleShare} className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      onClick={handleShare}
+                      disabled={isJobInactive}
+                      className={`flex-1 ${
+                        isJobInactive ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                      title={isJobInactive ? 'Tidak bisa berbagi lowongan yang ditutup' : ''}
+                    >
                       <Share2 className="w-5 h-5 mr-2" />
                       Bagikan
                     </Button>
@@ -361,7 +393,9 @@ const JobDetailPage: React.FC = () => {
                 </div>
 
                 {/* Company Card */}
-                <div className="bg-card border border-border rounded-xl p-6">
+                <div className={`bg-card border rounded-xl p-6 ${
+                  isJobInactive ? 'border-gray-200' : 'border-border'
+                }`}>
                   <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                     <Building2 className="w-5 h-5 text-primary" />
                     Tentang Perusahaan
