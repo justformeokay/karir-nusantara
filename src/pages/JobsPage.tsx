@@ -24,6 +24,7 @@ const JobsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialKeyword = searchParams.get('q') || '';
   const initialCategory = searchParams.get('category') || '';
+  const companyHashId = searchParams.get('company') || undefined;
   
   const [keyword, setKeyword] = useState(initialKeyword);
   const [debouncedKeyword, setDebouncedKeyword] = useState(initialKeyword);
@@ -80,6 +81,7 @@ const JobsPage: React.FC = () => {
     job_type: filters.type !== 'all' ? JOB_TYPE_MAP[filters.type] || filters.type : undefined,
     salary_min: salaryRange.min,
     salary_max: salaryRange.max,
+    company: companyHashId, // Filter by company if provided in URL
   });
 
   // Flatten all pages into a single array of jobs

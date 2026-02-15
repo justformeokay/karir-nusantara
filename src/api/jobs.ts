@@ -90,6 +90,7 @@ export interface JobListParams {
   is_remote?: boolean;
   salary_min?: number;
   salary_max?: number;
+  company?: string; // Company hash_id for filtering
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
 }
