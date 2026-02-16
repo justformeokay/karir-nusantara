@@ -274,15 +274,8 @@ export function ApplicationProvider({ children }: ApplicationProviderProps) {
   // Load applications from API or localStorage
   const loadApplications = useCallback(async () => {
     if (!isAuthenticated) {
-      // Try to load from localStorage when not authenticated
-      try {
-        const stored = localStorage.getItem('karir_applications');
-        if (stored) {
-          setApplications(JSON.parse(stored));
-        }
-      } catch {
-        // Ignore localStorage errors
-      }
+      // Clear applications when not authenticated
+      setApplications([]);
       return;
     }
 
@@ -319,6 +312,14 @@ export function ApplicationProvider({ children }: ApplicationProviderProps) {
   useEffect(() => {
     loadApplications();
   }, [loadApplications]);
+
+  // Clear applications when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setApplications([]);
+      localStorage.removeItem('karir_applications');
+    }
+  }, [isAuthenticated]);
 
   // Calculate stats
   const stats = useMemo(() => calculateStats(applications), [applications]);
