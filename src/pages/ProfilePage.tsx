@@ -379,14 +379,6 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex gap-3 w-full md:w-auto">
-                  <Button
-                    onClick={() => setIsEditModalOpen(true)}
-                    variant="outline"
-                    className="flex-1 md:flex-none gap-2 border-primary/30 hover:bg-primary/10"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    Edit Profile
-                  </Button>
                   <Link to="/rekomendasi">
                     <Button
                       variant="default"

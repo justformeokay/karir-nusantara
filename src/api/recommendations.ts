@@ -56,6 +56,7 @@ function transformJob(apiJob: JobApiResponse): Job {
     status: apiJob.status,
     viewsCount: apiJob.views_count || 0,
     applicationsCount: apiJob.applications_count || 0,
+    applicationDeadline: apiJob.application_deadline,
     publishedAt: apiJob.published_at,
     createdAt: apiJob.created_at,
   };

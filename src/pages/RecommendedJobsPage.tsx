@@ -15,6 +15,10 @@ import {
   BookOpen,
   UserCircle,
   FileText,
+  Users,
+  Calendar,
+  Award,
+  TimerIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -79,6 +83,60 @@ const parseRequirements = (requirements?: string): string[] => {
     .split(/[\n•\-\*]/)
     .map(s => s.trim())
     .filter(s => s.length > 0);
+};
+
+// Format experience level
+const formatExperienceLevel = (level: string): string => {
+  const map: Record<string, string> = {
+    'entry': 'Entry Level',
+    'junior': 'Junior',
+    'mid': 'Mid Level',
+    'senior': 'Senior',
+    'lead': 'Lead',
+    'executive': 'Executive',
+  };
+  return map[level] || level;
+};
+
+// Format relative time
+const formatRelativeTime = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Hari ini';
+    if (diffDays === 1) return 'Kemarin';
+    if (diffDays < 7) return `${diffDays} hari lalu`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} minggu lalu`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} bulan lalu`;
+    return `${Math.floor(diffDays / 365)} tahun lalu`;
+  } catch {
+    return dateString;
+  }
+};
+
+// Format deadline
+const formatDeadline = (deadline?: string): { text: string; urgent: boolean } | null => {
+  if (!deadline) return null;
+  
+  try {
+    const deadlineDate = new Date(deadline);
+    const now = new Date();
+    const diffTime = deadlineDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return null; // Expired
+    if (diffDays === 0) return { text: 'Deadline hari ini!', urgent: true };
+    if (diffDays === 1) return { text: 'Deadline besok!', urgent: true };
+    if (diffDays <= 3) return { text: `${diffDays} hari lagi`, urgent: true };
+    if (diffDays <= 7) return { text: `${diffDays} hari lagi`, urgent: false };
+    if (diffDays <= 30) return { text: `${Math.ceil(diffDays / 7)} minggu lagi`, urgent: false };
+    return { text: `${Math.ceil(diffDays / 30)} bulan lagi`, urgent: false };
+  } catch {
+    return null;
+  }
 };
 
 const RecommendedJobsPage: React.FC = () => {
@@ -266,6 +324,8 @@ const RecommendedJobsPage: React.FC = () => {
                 const isExpanded = selectedJob === rec.job.id;
                 const scoreColor = getScoreColor(rec.score);
                 const scoreLabel = getScoreLabel(rec.score);
+                const deadline = formatDeadline(rec.job.applicationDeadline);
+                const publishedTime = rec.job.publishedAt ? formatRelativeTime(rec.job.publishedAt) : null;
 
                 return (
                   <motion.div
@@ -279,111 +339,162 @@ const RecommendedJobsPage: React.FC = () => {
                   >
                     {/* Main Content */}
                     <div
-                      onClick={() => setSelectedJob(isExpanded ? null : rec.job.id)}
-                      className="w-full p-6 text-left hover:bg-muted/50 transition-colors cursor-pointer"
+                      className="w-full p-6 text-left"
                     >
-                      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-start">
-                        {/* Job Info */}
-                        <div className="flex gap-4">
-                          {rec.job.company?.logo_url ? (
-                            <img
-                              src={rec.job.company.logo_url}
-                              alt={rec.job.company?.name || 'Company'}
-                              className="w-16 h-16 rounded-lg object-cover bg-muted flex-shrink-0"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                                target.nextElementSibling?.classList.remove('hidden');
-                              }}
-                            />
-                          ) : null}
-                          <div className={`w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0 ${rec.job.company?.logo_url ? 'hidden' : ''}`}>
-                            <span className="text-2xl font-bold text-primary">
-                              {(rec.job.company?.name || 'C').charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start gap-3 mb-2">
-                              <h3 className="text-lg font-bold text-foreground truncate">
-                                {rec.job.title}
-                              </h3>
-                              {hasApplied(rec.job.id) && (
-                                <Badge className="gap-1 whitespace-nowrap bg-green-100 text-green-700 border-green-300">
-                                  <CheckCircle2 className="w-3 h-3" />
-                                  Sudah Dilamar
-                                </Badge>
-                              )}
+                      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6">
+                        {/* Left: Job Info */}
+                        <div className="space-y-4">
+                          {/* Header */}
+                          <div className="flex gap-4">
+                            {rec.job.company?.logo_url ? (
+                              <img
+                                src={rec.job.company.logo_url}
+                                alt={rec.job.company?.name || 'Company'}
+                                className="w-14 h-14 rounded-lg object-cover bg-muted flex-shrink-0 border border-border"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  target.nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-14 h-14 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0 ${rec.job.company?.logo_url ? 'hidden' : ''}`}>
+                              <span className="text-2xl font-bold text-primary">
+                                {(rec.job.company?.name || 'C').charAt(0).toUpperCase()}
+                              </span>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-3 truncate">
-                              {rec.job.company?.name || 'Unknown Company'} • {rec.job.location}
-                            </p>
-
-                            {/* Tags */}
-                            <div className="flex flex-wrap gap-2">
-                              <Badge variant="secondary" className="gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {rec.job.location}
-                              </Badge>
-                              <Badge variant="outline" className="gap-1">
-                                <Briefcase className="w-3 h-3" />
-                                {formatJobType(rec.job.jobType)}
-                              </Badge>
-                              {rec.job.salaryMin && (
-                                <Badge variant="outline" className="gap-1">
-                                  <DollarSign className="w-3 h-3" />
-                                  Rp. {rec.job.salaryMin.toLocaleString('id-ID')}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Score Section */}
-                        <div className="text-right">
-                          <div className="mb-4">
-                            {/* Score Circle */}
-                            <div className="relative w-32 h-32 mx-auto mb-3">
-                              <svg className="w-full h-full transform -rotate-90">
-                                <circle
-                                  cx="64"
-                                  cy="64"
-                                  r="56"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                  className="text-muted/30"
-                                />
-                                <motion.circle
-                                  cx="64"
-                                  cy="64"
-                                  r="56"
-                                  fill="none"
-                                  stroke={scoreColor}
-                                  strokeWidth="4"
-                                  initial={{ strokeDasharray: '0 352' }}
-                                  animate={{
-                                    strokeDasharray: `${(rec.score / 100) * 352} 352`,
-                                  }}
-                                  transition={{ duration: 0.8, ease: 'easeOut' }}
-                                />
-                              </svg>
-                              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <p className="text-3xl font-bold text-foreground leading-none">
-                                  {rec.score}%
-                                </p>
-                                <p className="text-xs font-medium text-muted-foreground mt-0.5 whitespace-nowrap">
-                                  {scoreLabel}
-                                </p>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start gap-2 mb-1">
+                                <h3 className="text-xl font-bold text-foreground flex-1">
+                                  {rec.job.title}
+                                </h3>
+                                {hasApplied(rec.job.id) && (
+                                  <Badge className="gap-1 whitespace-nowrap bg-green-100 text-green-700 border-green-300">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Applied
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm font-medium text-muted-foreground mb-2">
+                                {rec.job.company?.name || 'Unknown Company'}
+                              </p>
+                              
+                              {/* Meta Info Grid */}
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="w-3.5 h-3.5 text-primary" />
+                                  <span>{rec.job.location}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Briefcase className="w-3.5 h-3.5 text-primary" />
+                                  <span>{formatJobType(rec.job.jobType)}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Award className="w-3.5 h-3.5 text-primary" />
+                                  <span>{formatExperienceLevel(rec.job.experienceLevel)}</span>
+                                </div>
+                                {rec.job.applicationsCount > 0 && (
+                                  <div className="flex items-center gap-1.5">
+                                    <Users className="w-3.5 h-3.5 text-primary" />
+                                    <span>{rec.job.applicationsCount} pelamar</span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
 
-                          {/* CTA Buttons */}
-                          <div className="space-y-2">
-                            <Link to={`/lowongan/${rec.job.hashId || rec.job.id}`}>
+                          {/* Salary & Additional Info */}
+                          <div className="flex flex-wrap gap-2">
+                            {(rec.job.salaryMin || rec.job.salaryMax) && (
+                              <Badge variant="secondary" className="gap-1.5 bg-green-50 text-green-700 border-green-200">
+                                <DollarSign className="w-3.5 h-3.5" />
+                                {formatSalary(rec.job.salaryMin, rec.job.salaryMax)}
+                              </Badge>
+                            )}
+                            {publishedTime && (
+                              <Badge variant="outline" className="gap-1.5">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {publishedTime}
+                              </Badge>
+                            )}
+                            {deadline && (
+                              <Badge 
+                                variant={deadline.urgent ? "destructive" : "outline"} 
+                                className={`gap-1.5 ${deadline.urgent ? 'bg-orange-50 text-orange-700 border-orange-300' : ''}`}
+                              >
+                                <TimerIcon className="w-3.5 h-3.5" />
+                                {deadline.text}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Skills */}
+                          {rec.job.skills && rec.job.skills.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {rec.job.skills.slice(0, 5).map((skill, idx) => (
+                                <Badge 
+                                  key={idx} 
+                                  variant="outline" 
+                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  {skill}
+                                </Badge>
+                              ))}
+                              {rec.job.skills.length > 5 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{rec.job.skills.length - 5} lainnya
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Right: Score & Actions */}
+                        <div className="flex flex-col items-center gap-4">
+                          {/* Score Circle */}
+                          <div className="relative w-28 h-28">
+                            <svg className="w-full h-full transform -rotate-90">
+                              <circle
+                                cx="56"
+                                cy="56"
+                                r="50"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                className="text-muted/20"
+                              />
+                              <motion.circle
+                                cx="56"
+                                cy="56"
+                                r="50"
+                                fill="none"
+                                stroke={scoreColor}
+                                strokeWidth="4"
+                                strokeLinecap="round"
+                                initial={{ strokeDasharray: '0 314' }}
+                                animate={{
+                                  strokeDasharray: `${(rec.score / 100) * 314} 314`,
+                                }}
+                                transition={{ duration: 0.8, ease: 'easeOut', delay: index * 0.1 }}
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <p className="text-2xl font-bold text-foreground leading-none">
+                                {rec.score}%
+                              </p>
+                              <p className="text-[10px] font-medium text-muted-foreground mt-1">
+                                {scoreLabel}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex flex-col gap-2 w-full max-w-[140px]">
+                            <Link to={`/lowongan/${rec.job.hashId || rec.job.id}`} className="w-full">
                               <Button size="sm" className="w-full gap-2">
+                                <FileText className="w-3.5 h-3.5" />
                                 Lihat Detail
-                                <ArrowRight className="w-4 h-4" />
                               </Button>
                             </Link>
                             <Button
@@ -395,7 +506,7 @@ const RecommendedJobsPage: React.FC = () => {
                                 setSelectedJob(isExpanded ? null : rec.job.id);
                               }}
                             >
-                              {isExpanded ? 'Tutup' : 'Info Match'}
+                              {isExpanded ? 'Tutup Info' : 'Info Match'}
                             </Button>
                           </div>
                         </div>

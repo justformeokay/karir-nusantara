@@ -44,6 +44,7 @@ export interface JobApiResponse {
   status: 'draft' | 'active' | 'paused' | 'closed' | 'filled';
   views_count?: number;
   applications_count?: number;
+  application_deadline?: string;
   published_at?: string;
   created_at: string;
   updated_at?: string;
@@ -75,6 +76,7 @@ export interface Job {
   status: 'draft' | 'active' | 'paused' | 'closed' | 'filled';
   viewsCount: number;
   applicationsCount: number;
+  applicationDeadline?: string;
   publishedAt?: string;
   createdAt: string;
 }
@@ -134,6 +136,7 @@ function transformJob(apiJob: JobApiResponse): Job {
     status: apiJob.status,
     viewsCount: apiJob.views_count || 0,
     applicationsCount: apiJob.applications_count || 0,
+    applicationDeadline: apiJob.application_deadline,
     publishedAt: apiJob.published_at,
     createdAt: apiJob.created_at,
   };
