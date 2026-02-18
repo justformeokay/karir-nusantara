@@ -16,9 +16,20 @@ import {
   CheckCircle2,
   Upload,
   FileText,
+  Flag,
+  AlertTriangle,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { formatSalaryRange, getTimeAgo } from '@/data/jobs';
 import { useAuth } from '@/contexts/AuthContext.new';
 import { useApplications } from '@/contexts/ApplicationContext.new';
@@ -29,6 +40,7 @@ import { useJob } from '@/hooks/useJobs';
 import { useCV } from '@/hooks/useCV';
 import { useDocuments } from '@/hooks/useProfile';
 import { getJobTypeLabel, trackJobView, trackJobShare, type Job } from '@/api/jobs';
+import { createJobReport, checkReportStatus, REPORT_REASONS, type CreateReportRequest } from '@/api/jobreports';
 
 const JobDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +52,13 @@ const JobDetailPage: React.FC = () => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedCVSource, setSelectedCVSource] = useState<'built' | 'uploaded' | null>(null);
   const hasTrackedView = useRef(false);
+
+  // Report modal state
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [hasReported, setHasReported] = useState(false);
+  const [reportReason, setReportReason] = useState<CreateReportRequest['reason'] | ''>('');
+  const [reportDescription, setReportDescription] = useState('');
 
   // Fetch from API using id (supports hash_id)
   const { data: apiJob, isLoading, isError } = useJob(id);
@@ -80,6 +99,17 @@ const JobDetailPage: React.FC = () => {
       trackJobView(id);
     }
   }, [isAuthenticated, job, id]);
+
+  // Check if user has already reported this job
+  useEffect(() => {
+    if (isAuthenticated && job?.id) {
+      checkReportStatus(job.id).then(res => {
+        setHasReported(res.has_reported);
+      }).catch(() => {
+        // Ignore errors - assume not reported
+      });
+    }
+  }, [isAuthenticated, job?.id]);
 
   if (isLoading) {
     return (
@@ -230,6 +260,44 @@ const JobDetailPage: React.FC = () => {
     // Track the share action if authenticated
     if (isAuthenticated && id) {
       trackJobShare(id, platform);
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    if (!id) return;
+    
+    if (!reportReason) {
+      toast.error('Pilih alasan laporan');
+      return;
+    }
+
+    if (reportDescription.trim().length < 10) {
+      toast.error('Deskripsi laporan minimal 10 karakter');
+      return;
+    }
+
+    setIsReporting(true);
+    try {
+      await createJobReport(id, {
+        reason: reportReason,
+        description: reportDescription.trim()
+      });
+      toast.success('Laporan berhasil dikirim. Tim kami akan meninjau laporan Anda.');
+      setHasReported(true);
+      setIsReportModalOpen(false);
+      setReportReason('');
+      setReportDescription('');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
+      const errorMessage = err.response?.data?.error || 'Gagal mengirim laporan. Silakan coba lagi.';
+      toast.error(errorMessage);
+    } finally {
+      setIsReporting(false);
     }
   };
 
@@ -488,6 +556,20 @@ const JobDetailPage: React.FC = () => {
                       Bagikan
                     </Button>
                   </div>
+                  
+                  {/* Report Button */}
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => setIsReportModalOpen(true)}
+                    disabled={hasReported || !isAuthenticated}
+                    className={`w-full mt-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 ${
+                      hasReported ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                    title={hasReported ? 'Anda sudah melaporkan lowongan ini' : !isAuthenticated ? 'Login untuk melaporkan lowongan' : 'Laporkan lowongan yang mencurigakan'}
+                  >
+                    <Flag className="w-4 h-4 mr-2" />
+                    {hasReported ? 'Sudah Dilaporkan' : 'Laporkan Lowongan'}
+                  </Button>
                 </div>
 
                 {/* Company Card */}
@@ -737,6 +819,81 @@ const JobDetailPage: React.FC = () => {
       )}
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+
+      {/* Report Modal */}
+      <Dialog open={isReportModalOpen} onOpenChange={setIsReportModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Laporkan Lowongan
+            </DialogTitle>
+            <DialogDescription>
+              Jika Anda merasa lowongan ini mencurigakan atau tidak pantas, silakan laporkan kepada kami.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Alasan Laporan *</label>
+              <select
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value as typeof reportReason)}
+                className="w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Pilih alasan...</option>
+                {REPORT_REASONS.map((reason) => (
+                  <option key={reason.value} value={reason.value}>
+                    {reason.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Deskripsi *</label>
+              <textarea
+                value={reportDescription}
+                onChange={(e) => setReportDescription(e.target.value)}
+                placeholder="Jelaskan mengapa Anda melaporkan lowongan ini (minimal 10 karakter)..."
+                className="w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                rows={4}
+              />
+              <p className="text-xs text-muted-foreground">
+                {reportDescription.length}/10 karakter minimum
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsReportModalOpen(false);
+                setReportReason('');
+                setReportDescription('');
+              }}
+              disabled={isReporting}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReportSubmit}
+              disabled={isReporting || !reportReason || reportDescription.trim().length < 10}
+            >
+              {isReporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Mengirim...
+                </>
+              ) : (
+                'Kirim Laporan'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
