@@ -73,6 +73,12 @@ const Navbar: React.FC = () => {
                       Lamaran Saya
                     </Button>
                   </Link>
+                  <Link to="/tes-wawancara">
+                    <Button variant="outline" size="sm" className="gap-2 border-purple-500/30 bg-purple-50 hover:bg-purple-100 text-purple-700">
+                      <Zap className="w-4 h-4" />
+                      Tes Wawancara
+                    </Button>
+                  </Link>
                   <Link to="/rekomendasi">
                     <Button variant="outline" size="sm" className="gap-2 border-primary/30 hover:bg-primary/10">
                       <Sparkles className="w-4 h-4" />
@@ -141,6 +147,12 @@ const Navbar: React.FC = () => {
                         <Button variant="outline" className="w-full gap-2 border-blue-500/30 bg-blue-50 hover:bg-blue-100 text-blue-700">
                           <ClipboardList className="w-4 h-4" />
                           Lamaran Saya
+                        </Button>
+                      </Link>
+                      <Link to="/tes-wawancara" className="block mb-2" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full gap-2 border-purple-500/30 bg-purple-50 hover:bg-purple-100 text-purple-700">
+                          <Zap className="w-4 h-4" />
+                          Tes Wawancara
                         </Button>
                       </Link>
                       <Link to="/rekomendasi" className="block mb-2" onClick={() => setIsMobileMenuOpen(false)}>

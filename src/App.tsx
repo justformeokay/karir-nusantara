@@ -8,6 +8,7 @@ import { CVProvider } from "@/contexts/CVContext.new";
 import { ApplicationProvider } from "@/contexts/ApplicationContext.new";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Layout from "@/components/layout/Layout";
+import { FullscreenTestLayout } from "@/components/layout/FullscreenTestLayout";
 import HomePage from "@/pages/HomePage";
 import JobsPage from "@/pages/JobsPage";
 import JobDetailPage from "@/pages/JobDetailPage";
@@ -27,6 +28,8 @@ import SupportTicketingPage from "@/pages/SupportTicketingPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "@/pages/NotFound";
+import InterviewTestsPage from "@/pages/InterviewTestsPage";
+import TakeTestPage from "@/pages/TakeTestPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -104,7 +107,22 @@ const App = () => (
                   <Route path="/dukungan" element={<SupportTicketingPage />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  <Route path="/tes-wawancara" element={
+                    <ProtectedRoute requiredRole="job_seeker">
+                      <InterviewTestsPage />
+                    </ProtectedRoute>
+                  } />
                 </Route>
+
+                {/* Fullscreen test layout - no navbar */}
+                <Route element={<FullscreenTestLayout />}>
+                  <Route path="/tes-wawancara/:submissionId" element={
+                    <ProtectedRoute requiredRole="job_seeker">
+                      <TakeTestPage />
+                    </ProtectedRoute>
+                  } />
+                </Route>
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
