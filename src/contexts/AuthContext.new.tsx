@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   login as apiLogin,
   register as apiRegister,
@@ -107,6 +108,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth();
   }, []);
 
+  // Access QueryClient for cache management on auth state changes
+  const queryClient = useQueryClient();
+
   // Persist user to localStorage whenever it changes
   useEffect(() => {
     if (user) {
@@ -121,6 +125,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
 
     try {
+      // Clear all cached data from previous user session
+      queryClient.clear();
+      localStorage.removeItem('cvData');
+      localStorage.removeItem('karir_applications');
+
       const response = await apiLogin({ email, password });
       
       // Store token
@@ -138,7 +147,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   const register = useCallback(async (
     name: string,
@@ -158,8 +167,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         ...(phone && { phone }),
       };
 
+      // Clear all cached data BEFORE registration (in case there was a previous session)
+      queryClient.clear();
+      localStorage.removeItem('cvData');
+      localStorage.removeItem('karir_applications');
+
       const response = await apiRegister(request);
-      
+
       // Store token
       setAccessToken(response.access_token);
       
@@ -175,7 +189,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   const logout = useCallback(async (): Promise<void> => {
     try {
@@ -183,13 +197,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch {
       // Ignore logout errors, proceed with local cleanup
     } finally {
+      // Clear all React Query cached data from this user session
+      queryClient.clear();
+
       removeAccessToken();
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('cvData');
       localStorage.removeItem('karir_applications');
     }
-  }, []);
+  }, [queryClient]);
 
   const clearError = useCallback(() => {
     setError(null);

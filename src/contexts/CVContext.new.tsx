@@ -118,19 +118,9 @@ const normalizeCVData = (data: Partial<CVData>): CVData => {
 };
 
 export const CVProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  const [cvData, setCvData] = useState<CVData>(() => {
-    try {
-      const saved = localStorage.getItem('cvData');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return normalizeCVData(parsed);
-      }
-    } catch (error) {
-      console.error('❌ Error loading CV data from localStorage:', error);
-    }
-    return defaultCVData;
-  });
+  const { isAuthenticated, user } = useAuth();
+  const [cvData, setCvData] = useState<CVData>(defaultCVData);
+  const [hasLoadedFromServer, setHasLoadedFromServer] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -157,11 +147,21 @@ export const CVProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         setCvData(frontendCV);
         saveToLocalStorage(frontendCV);
         setLastSynced(new Date());
+        setHasLoadedFromServer(true);
         console.log('✅ Loaded CV from server');
+      } else {
+        // No CV exists for this user - reset to default
+        setCvData(defaultCVData);
+        localStorage.removeItem('cvData');
+        setHasLoadedFromServer(true);
+        console.log('ℹ️ No CV found for this user, reset to default');
       }
     } catch (error) {
       console.error('❌ Error loading CV from server:', error);
-      // Keep using localStorage data
+      // On error, reset to default rather than keeping stale data from another user
+      setCvData(defaultCVData);
+      localStorage.removeItem('cvData');
+      setHasLoadedFromServer(true);
     } finally {
       setIsLoading(false);
     }
@@ -186,23 +186,29 @@ export const CVProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [isAuthenticated, cvData]);
 
-  // Auto-load from server when auth state changes
+  // Reset CV data when user changes (login/logout/switch account)
   useEffect(() => {
+    // Reset state immediately when user changes
+    setCvData(defaultCVData);
+    localStorage.removeItem('cvData');
+    setHasLoadedFromServer(false);
+    setLastSynced(null);
+
     if (isAuthenticated) {
       loadFromServer();
     }
-  }, [isAuthenticated, loadFromServer]);
+  }, [user?.id]); // Re-run when user ID changes
 
-  // Debounced auto-sync to server
+  // Debounced auto-sync to server - only sync if data was loaded from server first
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !hasLoadedFromServer) return;
     
     const timeoutId = setTimeout(() => {
       syncToServer().catch(console.error);
     }, 3000); // Sync 3 seconds after last change
 
     return () => clearTimeout(timeoutId);
-  }, [cvData, isAuthenticated, syncToServer]);
+  }, [cvData, isAuthenticated, hasLoadedFromServer, syncToServer]);
 
   const updatePersonalInfo = useCallback((data: Partial<CVData['personalInfo']>) => {
     setCvData(prev => {

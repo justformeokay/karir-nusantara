@@ -50,6 +50,7 @@ const JobDetailPage: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [isCVPromptOpen, setIsCVPromptOpen] = useState(false);
   const [selectedCVSource, setSelectedCVSource] = useState<'built' | 'uploaded' | null>(null);
   const hasTrackedView = useRef(false);
 
@@ -86,6 +87,14 @@ const JobDetailPage: React.FC = () => {
   const hasUploadedCV = isAuthenticated && !!uploadedCV;
   const hasCVReady = hasBuiltCV || hasUploadedCV;
   const isCVCheckLoading = isCVLoading || isDocsLoading;
+
+  // Auto-switch from confirmation dialog to CV prompt when loading finishes and CV is empty
+  useEffect(() => {
+    if (isConfirmDialogOpen && !isCVCheckLoading && !hasCVReady) {
+      setIsConfirmDialogOpen(false);
+      setIsCVPromptOpen(true);
+    }
+  }, [isConfirmDialogOpen, isCVCheckLoading, hasCVReady]);
 
   // Use API job directly
   const job = apiJob;
@@ -156,6 +165,18 @@ const JobDetailPage: React.FC = () => {
     }
 
     if (!job) return;
+
+    // If CV check is still loading, wait for it - show confirmation dialog which has loading state
+    if (isCVCheckLoading) {
+      setIsConfirmDialogOpen(true);
+      return;
+    }
+
+    // If CV is not ready, show dedicated CV prompt dialog instead
+    if (!hasCVReady) {
+      setIsCVPromptOpen(true);
+      return;
+    }
 
     // Determine CV selection logic
     if (hasBuiltCV && hasUploadedCV) {
@@ -814,6 +835,76 @@ const JobDetailPage: React.FC = () => {
                 )}
               </Button>
             </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* CV Prompt Dialog - shown when user has no CV */}
+      {isCVPromptOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setIsCVPromptOpen(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-card rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-8 h-8 text-amber-600" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground mb-2">CV Diperlukan</h2>
+              <p className="text-sm text-muted-foreground">
+                Untuk melamar <span className="font-semibold text-foreground">{job?.title}</span> di{' '}
+                <span className="font-semibold text-foreground">{job?.company.name}</span>, Anda harus melengkapi CV terlebih dahulu.
+              </p>
+            </div>
+
+            {/* Options */}
+            <div className="space-y-3 mb-6">
+              <Link
+                to="/cv"
+                onClick={() => setIsCVPromptOpen(false)}
+                className="flex items-center gap-4 p-4 rounded-xl border-2 border-primary/30 bg-primary/5 hover:border-primary hover:bg-primary/10 transition-all group"
+              >
+                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Buat CV Online</p>
+                  <p className="text-xs text-muted-foreground">Gunakan builder CV gratis milik Karir Nusantara</p>
+                </div>
+              </Link>
+
+              <Link
+                to="/profile?tab=cv"
+                onClick={() => setIsCVPromptOpen(false)}
+                className="flex items-center gap-4 p-4 rounded-xl border-2 border-border bg-muted/30 hover:border-primary/50 hover:bg-muted/60 transition-all group"
+              >
+                <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Upload className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Upload CV</p>
+                  <p className="text-xs text-muted-foreground">Upload file CV yang sudah Anda miliki (PDF)</p>
+                </div>
+              </Link>
+            </div>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setIsCVPromptOpen(false)}
+            >
+              Nanti Saja
+            </Button>
           </motion.div>
         </motion.div>
       )}

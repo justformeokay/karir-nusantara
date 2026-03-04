@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User as UserIcon,
@@ -61,6 +61,7 @@ import CVPDFGenerator from '@/components/cv/CVPDFGenerator';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, logout, isAuthenticated } = useAuth();
   const { applications, isLoading: applicationsLoading } = useApplications();
   const { data: wishlistData, isLoading: wishlistLoading } = useWishlist();
@@ -69,7 +70,11 @@ const ProfilePage: React.FC = () => {
   const uploadAvatarMutation = useUploadAvatar();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   
-  const [activeTab, setActiveTab] = useState<'applications' | 'saved' | 'cv' | 'profile'>('applications');
+  const [activeTab, setActiveTab] = useState<'applications' | 'saved' | 'cv' | 'profile'>(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'cv' || tab === 'saved' || tab === 'profile' || tab === 'applications') return tab;
+    return 'applications';
+  });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
@@ -457,7 +462,7 @@ const ProfilePage: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="bg-card border border-border rounded-xl shadow-sm overflow-hidden"
         >
-          <Tabs defaultValue="applications" className="w-full" onValueChange={(value) => setActiveTab(value as 'applications' | 'saved' | 'cv' | 'profile')}>
+          <Tabs defaultValue={activeTab} className="w-full" onValueChange={(value) => setActiveTab(value as 'applications' | 'saved' | 'cv' | 'profile')}>
             <div className="border-b border-border bg-muted/30">
               <TabsList className="grid w-full grid-cols-4 gap-0 rounded-none bg-transparent p-0">
                 <TabsTrigger
