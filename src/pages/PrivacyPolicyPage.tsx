@@ -10,8 +10,8 @@ const PrivacyPolicyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-white py-12">
-        <div className="container mx-auto px-4 mt-16">
+      <div className="bg-gradient-to-r from-primary to-primary/80 text-white py-12 pt-20 md:pt-24">
+        <div className="container mx-auto px-4">
           <Link to="/" className="inline-flex items-center gap-2 mb-6 hover:opacity-80 transition-opacity">
             <ArrowLeft className="w-4 h-4" />
             Kembali

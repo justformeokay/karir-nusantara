@@ -215,13 +215,13 @@ export default function MyApplicationsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white pt-20 md:pt-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2 mt-12">Lamaran Saya</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Lamaran Saya</h1>
             <p className="text-blue-100">
               Pantau progress semua lamaran pekerjaanmu di satu tempat
             </p>
