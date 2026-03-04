@@ -74,12 +74,12 @@ const HomePage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="w-full min-h-screen flex flex-col">
       {/* Announcement Banner */}
       <AnnouncementBanner />
 
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-r from-slate-800 via-slate-700 to-teal-600">
+      <section className="relative w-full min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-r from-slate-800 via-slate-700 to-teal-600">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
@@ -91,22 +91,22 @@ const HomePage: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="relative container mx-auto px-4 py-20">
+        <div className="relative container mx-auto px-4 py-12 sm:py-16 md:py-20">
           <div className="max-w-3xl">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 text-primary-foreground rounded-full text-sm font-medium mb-6">
-                <Star className="w-4 h-4" />
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/20 text-primary-foreground rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+                <Star className="w-3 h-3 sm:w-4 sm:h-4" />
                 Platform Kerja #1 di Indonesia
               </span>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-background leading-tight mb-6">
+              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-background leading-tight mb-4 sm:mb-6">
                 Temukan Karir Impian Anda di{' '}
                 <span className="text-blue-400">Karir Nusantara</span>
               </h1>
-              <p className="text-lg md:text-xl text-background/80 mb-8 leading-relaxed">
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-background/80 mb-6 sm:mb-8 leading-relaxed">
                 Ribuan lowongan dari perusahaan terbaik Indonesia. Cari kerja, buat CV profesional, dan lamar dengan mudah.
               </p>
             </motion.div>
@@ -124,14 +124,14 @@ const HomePage: React.FC = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-wrap items-center gap-6"
+              className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-6"
             >
-              <p className="text-background/60 text-sm">Populer:</p>
+              <p className="text-background/60 text-xs sm:text-sm">Populer:</p>
               {['Software Engineer', 'Marketing', 'Data Analyst', 'Designer'].map(term => (
                 <Link
                   key={term}
                   to={`/lowongan?q=${encodeURIComponent(term)}`}
-                  className="text-sm text-background/80 hover:text-blue-400 transition-colors"
+                  className="text-xs sm:text-sm text-background/80 hover:text-blue-400 transition-colors"
                 >
                   {term}
                 </Link>
@@ -142,9 +142,9 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 bg-primary">
+      <section className="w-full py-8 sm:py-12 bg-primary">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -154,9 +154,9 @@ const HomePage: React.FC = () => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="text-center"
               >
-                <stat.icon className="w-8 h-8 text-primary-foreground/80 mx-auto mb-3" />
-                <p className="text-2xl md:text-3xl font-bold text-primary-foreground">{stat.value}</p>
-                <p className="text-sm text-primary-foreground/70">{stat.label}</p>
+                <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground/80 mx-auto mb-2 sm:mb-3" />
+                <p className="text-lg sm:text-2xl md:text-3xl font-bold text-primary-foreground">{stat.value}</p>
+                <p className="text-xs sm:text-sm text-primary-foreground/70">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -164,9 +164,9 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Notifications and Information Section */}
-      <section className="py-12 bg-background">
+      <section className="w-full py-8 sm:py-12 bg-background">
         <div className="container mx-auto px-4">
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <NotificationsList />
             <InformationSection />
           </div>
@@ -174,18 +174,18 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Featured Jobs */}
-      <section className="py-16 md:py-24 bg-muted">
+      <section className="w-full py-12 sm:py-16 md:py-24 bg-muted">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 sm:mb-4">
               Lowongan Terbaru
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
               Temukan peluang karir dari berbagai industri dan lokasi di Indonesia
             </p>
           </motion.div>
@@ -227,23 +227,23 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Categories */}
-      <section className="py-16 md:py-24">
+      <section className="w-full py-12 sm:py-16 md:py-24">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 sm:mb-4">
               Jelajahi Kategori
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
               Temukan lowongan berdasarkan bidang keahlian Anda
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
             {jobCategories.map((category, index) => {
               const IconComponent = categoryIcons[category] || Briefcase;
               return (
@@ -256,10 +256,10 @@ const HomePage: React.FC = () => {
                 >
                   <Link
                     to={`/lowongan?category=${encodeURIComponent(category)}`}
-                    className="block p-6 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-card transition-all duration-300 text-center group"
+                    className="block p-3 sm:p-4 md:p-6 bg-card border border-border rounded-lg sm:rounded-xl hover:border-primary/30 hover:shadow-card transition-all duration-300 text-center group"
                   >
-                    <IconComponent className="w-8 h-8 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform" />
-                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    <IconComponent className="w-6 h-6 sm:w-8 sm:h-8 text-primary mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform" />
+                    <h3 className="text-xs sm:text-sm md:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
                       {category}
                     </h3>
                   </Link>
@@ -271,32 +271,32 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* CV Builder CTA */}
-      <section className="py-16 md:py-24 bg-primary">
+      <section className="w-full py-12 sm:py-16 md:py-24 bg-primary">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               className="flex-1"
             >
-              <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-foreground mb-4 sm:mb-6">
                 Buat CV Profesional dalam Hitungan Menit
               </h2>
-              <p className="text-lg text-primary-foreground/80 mb-8">
+              <p className="text-sm sm:text-base md:text-lg text-primary-foreground/80 mb-6 sm:mb-8">
                 Gunakan CV Builder gratis kami untuk membuat CV yang menarik dan siap ATS. Download langsung dalam format PDF.
               </p>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                 {benefits.map(benefit => (
-                  <li key={benefit} className="flex items-center gap-3 text-primary-foreground/90">
-                    <CheckCircle className="w-5 h-5 text-primary-foreground" />
+                  <li key={benefit} className="flex items-center gap-3 text-sm sm:text-base text-primary-foreground/90">
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-primary-foreground" />
                     {benefit}
                   </li>
                 ))}
               </ul>
               <Link to="/buat-cv">
-                <Button size="lg" variant="secondary" className="font-semibold">
-                  <FileText className="w-5 h-5 mr-2" />
+                <Button size="lg" variant="secondary" className="font-semibold w-full sm:w-auto">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Buat CV Sekarang
                 </Button>
               </Link>
@@ -359,7 +359,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 md:py-24">
+      <section className="w-full py-16 md:py-24">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -399,7 +399,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Company Recruitment Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-primary">
+      <section className="w-full py-16 md:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-primary overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Content */}
@@ -559,7 +559,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 md:py-24">
+      <section className="w-full py-16 md:py-24">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -103,31 +103,31 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, isApplied = false }) 
       transition={{ duration: 0.4, delay: index * 0.1 }}
     >
       <Link to={`/lowongan/${job.hashId || job.id}`}>
-        <div className={`group bg-card border rounded-xl p-5 hover:shadow-card-hover transition-all duration-300 hover:border-primary/30 ${isApplied ? 'border-green-300 bg-green-50/30' : isInactive ? 'border-gray-300 bg-gray-50/30' : 'border-border'}`}>
+        <div className={`group bg-card border rounded-lg sm:rounded-xl p-3 sm:p-5 hover:shadow-card-hover transition-all duration-300 hover:border-primary/30 ${isApplied ? 'border-green-300 bg-green-50/30' : isInactive ? 'border-gray-300 bg-gray-50/30' : 'border-border'}`}>
           {/* Status Badges */}
           {(isApplied || isInactive) && (
-            <div className="flex items-center gap-2 mb-3 -mt-1 flex-wrap">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3 -mt-1 flex-wrap">
               {isApplied && (
-                <div className="flex items-center gap-1.5 text-green-600">
-                  <CheckCircle2 className="w-4 h-4" />
+                <div className="flex items-center gap-1.5 text-green-600 text-xs">
+                  <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="text-xs font-medium">Sudah Dilamar</span>
                 </div>
               )}
               {isInactive && (
-                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${statusConfig.className}`}>
+                <div className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md border text-xs font-medium ${statusConfig.className}`}>
                   {statusConfig.icon}
-                  <span>{statusConfig.label}</span>
+                  <span className="text-xs">{statusConfig.label}</span>
                 </div>
               )}
             </div>
           )}
-          <div className="flex gap-4">
+          <div className="flex gap-2 sm:gap-4">
             {/* Company Logo */}
             <div className="flex-shrink-0">
               <img
                 src={companyLogoUrl}
                 alt={companyName}
-                className="w-14 h-14 rounded-xl object-cover bg-muted"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover bg-muted"
                 onError={(e) => {
                   e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&background=667eea&color=fff&size=128`;
                 }}
@@ -136,41 +136,41 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, isApplied = false }) 
 
             {/* Job Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div>
-                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                  <h3 className="font-semibold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
                     {job.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground mt-0.5">{companyName}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-1">{companyName}</p>
                 </div>
               </div>
 
               {/* Meta Info */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  {job.location}
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
+                  <span className="truncate">{job.location}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Briefcase className="w-4 h-4 text-primary" />
+                  <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
                   {formatJobType(job.jobType)}
                 </span>
                 {job.isRemote && (
                   <span className="flex items-center gap-1.5 text-success">
-                    <Wifi className="w-4 h-4" />
+                    <Wifi className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     Remote
                   </span>
                 )}
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-                <span className="font-semibold text-primary">
+              <div className="flex items-center justify-between mt-2 sm:mt-4 pt-2 sm:pt-3 border-t border-border">
+                <span className="font-semibold text-sm sm:text-base text-primary line-clamp-1">
                   {job.isSalaryVisible ? formatSalaryRange(job.salaryMin, job.salaryMax) : 'Gaji Dirahasiakan'}
                 </span>
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="w-3.5 h-3.5" />
-                  {getTimeAgo(job.publishedAt)}
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
+                  <Clock className="w-3 h-3 flex-shrink-0" />
+                  <span className="hidden xs:inline">{getTimeAgo(job.publishedAt)}</span>
                 </span>
               </div>
             </div>

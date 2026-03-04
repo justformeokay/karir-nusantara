@@ -55,34 +55,34 @@ const SearchBar: React.FC<SearchBarProps> = ({
   if (variant === 'hero') {
     return (
       <form onSubmit={handleSearch} className="w-full">
-        <div className="flex flex-col md:flex-row gap-3 p-3 md:p-2 bg-background rounded-2xl shadow-xl">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-2 sm:p-3 md:p-4 bg-background rounded-xl sm:rounded-2xl shadow-xl">
           {/* Keyword Input */}
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Posisi, skill, atau perusahaan..."
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
-              className="pl-12 h-14 border-0 bg-muted/50 text-base rounded-xl focus-visible:ring-primary"
+              className="pl-10 sm:pl-12 h-11 sm:h-14 border-0 bg-muted/50 text-sm sm:text-base rounded-lg sm:rounded-xl focus-visible:ring-primary"
             />
           </div>
 
           {/* Location Input */}
           <div className="relative flex-1">
-            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Kota atau provinsi..."
               value={location}
               onChange={e => setLocation(e.target.value)}
-              className="pl-12 pr-28 h-14 border-0 bg-muted/50 text-base rounded-xl focus-visible:ring-primary"
+              className="pl-10 sm:pl-12 pr-20 sm:pr-28 h-11 sm:h-14 border-0 bg-muted/50 text-sm sm:text-base rounded-lg sm:rounded-xl focus-visible:ring-primary"
             />
             <button
               type="button"
               onClick={detectLocation}
               disabled={isDetecting}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-primary hover:underline disabled:opacity-50"
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-primary hover:underline disabled:opacity-50"
             >
               {isDetecting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -93,9 +93,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </div>
 
           {/* Search Button */}
-          <Button type="submit" size="lg" className="h-14 px-8 rounded-xl text-base font-semibold">
-            <Search className="w-5 h-5 mr-2" />
-            Cari Lowongan
+          <Button type="submit" size="lg" className="h-11 sm:h-14 px-4 sm:px-8 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Cari</span>
+            <span className="inline xs:hidden">Cari</span>
           </Button>
         </div>
       </form>
